@@ -1,0 +1,5 @@
+V2.1.1-beta (2026-10-26)
+Launchers only: run_all also writes a Word report (Review to Word) for every checked file.
+The check scripts are identical to V2.1-beta (same SHA-256): the results do not change.
+A beta until its accuracy is measured on the test articles of the second data set (OSF Update 3).
+Not the version used in the paper (frozen 17.10c / v1.1, see CHANGELOG.md).
