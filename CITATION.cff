@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use checkHNMR, please cite it as below."
+title: "checkHNMR: consistency checks of 1H NMR descriptions"
+version: "V2.1.1-beta"
+date-released: "2026-10-28"
+license: MIT
+repository-code: "https://github.com/ArturEshtukov-Sheglov/checkHNMR"
+url: "https://checkhnmr.org"
+authors:
+  - family-names: "Eshtukov-Shcheglov"
+    given-names: "Artur V."
+    affiliation: "Independent Researcher, Moscow, Russia"
+    orcid: "https://orcid.org/0000-0002-8975-9958"
+keywords:
+  - NMR spectroscopy
+  - 1H NMR
+  - data quality
+  - research integrity
