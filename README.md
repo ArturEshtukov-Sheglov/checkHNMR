@@ -1,5 +1,9 @@
 # checkHNMR — local version
 
+[![DOI](https://zenodo.org/badge/1436401764.svg)](https://doi.org/10.5281/zenodo.23749627)
+
+Website: **[checkhnmr.org](https://checkhnmr.org)** (the same checks in the browser, up to 20 compounds). Archived code: [doi:10.5281/zenodo.23749627](https://doi.org/10.5281/zenodo.23749627) (all versions).
+
 Version **V2.1.1-beta** (26 October 2026). The same checks as the checkHNMR website, on your own computer:
 for more than 20 compounds, for Supporting Information files without SMILES (structures are made from the
 compound names), and for data you prefer not to open in a browser.
