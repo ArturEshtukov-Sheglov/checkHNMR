@@ -3,6 +3,21 @@
 All notable changes to the tools. Newest first. For every version: what changed and whether it
 changes the results. Dates are those of the code; the version used in the paper is marked.
 
+## 2026-10-30 — V2.1.2-beta (one reading fix in the check scripts)
+
+Changes that **change results** only for descriptions written in the non-first-order notation of Tang, Xu and
+Hoye (Molecules 2025, 30, 2610, doi:10.3390/molecules30122610):
+- `description_parser.py`: "nfot" and "nfom" (non-first-order triplet and multiplet) are read as multiplets,
+  as "nfod" already was in V2.1-beta. Before, they were not read as a multiplicity, and a J_app given with them
+  gave a false item-4(a) finding ("J without multiplicity").
+- `description_parser.py`: a sum of constants written as the splitting ("J_o + J_p = 8.6 Hz", "3J + 5J = 8.5 Hz")
+  is read as an apparent value (J_app), as protocol v1.2, item 6 (ii), requires. Before, only the last constant
+  of the sum was read, as an ordinary coupling constant.
+- Tests: `tests/test_v212_fixes.py` (4 tests; 86 unit tests in all). Self-test: all pass.
+- Regression: 7,745 published 1H descriptions from 214 SI files (Org. Lett. and Beilstein J. Org. Chem.,
+  read with count_1H_descriptions) parsed and checked (items 3, 4(a), 6(b)) with V2.1.1-beta and V2.1.2-beta:
+  0 descriptions changed (none of them uses this notation).
+
 ## 2026-10-26 — V2.1.1-beta (launchers only; the check scripts are identical to V2.1-beta)
 
 Changes that **do not change results**:

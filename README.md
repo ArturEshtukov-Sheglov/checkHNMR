@@ -4,7 +4,7 @@
 
 Website: **[checkhnmr.org](https://checkhnmr.org)** (the same checks in the browser, up to 20 compounds). Archived code: [doi:10.5281/zenodo.23749627](https://doi.org/10.5281/zenodo.23749627) (all versions).
 
-Version **V2.1.1-beta** (26 October 2026). The same checks as the checkHNMR website, on your own computer:
+Version **V2.1.2-beta** (30 October 2026). The same checks as the checkHNMR website, on your own computer:
 for more than 20 compounds, for Supporting Information files without SMILES (structures are made from the
 compound names), and for data you prefer not to open in a browser.
 
@@ -95,8 +95,9 @@ Every script prints its options with `--help`, e.g. `python check_descriptions/c
 
 ## Versions
 
-The history of changes is in [CHANGELOG.md](CHANGELOG.md). V2.1.1-beta differs from V2.1-beta only in the
-launchers (the Word report); the check scripts are identical. It is a beta until its accuracy has been measured
+The history of changes is in [CHANGELOG.md](CHANGELOG.md). V2.1.2-beta differs from V2.1-beta in the
+launchers (the Word report, V2.1.1-beta) and in one reading fix: the non-first-order notation nfod/nfot/nfom
+and sums of constants such as "J_o + J_p" are read as apparent values. It is a beta until its accuracy has been measured
 on test articles that were not used in its development.
 
 The tools were first developed for a survey of ¹H NMR descriptions in Organic Letters (first half of 2026). The

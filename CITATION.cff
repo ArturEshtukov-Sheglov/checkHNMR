@@ -1,8 +1,8 @@
 cff-version: 1.2.0
 message: "If you use checkHNMR, please cite it as below."
 title: "checkHNMR: consistency checks of 1H NMR descriptions"
-version: "V2.1.1-beta"
-date-released: "2026-10-28"
+version: "V2.1.2-beta"
+date-released: "2026-10-30"
 license: MIT
 doi: "10.5281/zenodo.23749627"
 repository-code: "https://github.com/ArturEshtukov-Sheglov/checkHNMR"

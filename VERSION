@@ -1,5 +1,6 @@
-V2.1.1-beta (2026-10-26)
-Launchers only: run_all also writes a Word report (Review to Word) for every checked file.
-The check scripts are identical to V2.1-beta (same SHA-256): the results do not change.
+V2.1.2-beta (2026-10-30)
+Reading of the non-first-order notation of Tang, Xu and Hoye (Molecules 2025, 30, 2610): nfod, nfot, nfom
+with J_app, and a sum of constants written as the splitting (J_o + J_p), is read as an apparent value.
+No change on 7,745 published descriptions used for regression (signals and verdicts identical).
 A beta until its accuracy is measured on the test articles of the second data set (OSF Update 3).
 Not the version used in the paper (frozen 17.10c / v1.1, see CHANGELOG.md).

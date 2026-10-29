@@ -43,6 +43,9 @@ J_BLOCK = re.compile(
     re.I)
 # v2: "2J = 3J = 13.4 Hz", "^{2}J =^{3}J = 13.6 Hz": two or more J symbols written equal to one value
 # v2.1: also with atom indices: "J4,3 = J4,5 = 7.2 Hz", "J1,3 = J1,3 = 7.2 Hz"
+# v2.1.2: a sum of constants written as the splitting ("J_o + J_p = 8.6 Hz", "3J + 5J = 8.5 Hz") is an apparent
+# value (protocol v1.2, item 6 (ii); Tang, Xu, Hoye, Molecules 2025, 30, 2610), not a coupling constant
+J_SUM = re.compile(r"(?:\d\s?)?J\s?_?\{?[A-Za-z0-9′'’,]{0,6}\}?(?:\s?\+\s?(?:\d\s?)?J\s?_?\{?[A-Za-z0-9′'’,]{0,6}\}?)+(?=\s?=)")
 J_CHAIN = re.compile(r"((?:(?:\^\{\d\}|\d)?\s?J(?:\s?\d{1,2}\s?,\s?\d{1,2}(?![\d.]))?\s?=\s?){2,})(" + NUM + r")")
 INTEGRAL = re.compile(r"(\d+(?:\.\d+)?)\s?(?:(?:arom|ar|aromatic|olefinic|vinyl|ring)\.?\s)?H\b")  # "2H", "1.5 H"; v2.1: "8 arom. H"
 BARE_VALUE = re.compile(r"(?<![\w.′'’-])\d{1,2}\.\d{1,2}(?![\w.′'’])")     # v2.1: "16.2" alone in the bracket
@@ -245,7 +248,8 @@ def _parse_mult(part):
     t = re.sub(r"^overlapp(?:ed|ing)\s+(?=[sdtq]{1,4}$)", "", t)                       # v2.1: "overlapped s"
     t = re.sub(r"\b(?:d2o\s)?exch(?:angeable)?\.?\s+", "", t)                       # v2.1: "exch br s"
     t = re.sub(r"^(?:complex|comp\.?|c\.\s?s\.?|oct(?:et)?\.?)$", "m", t)            # v2.1: "complex", "c.s.", "octet" -> m
-    t = re.sub(r"^nfod$", "m", t)               # v2.1: Hoye's "not first-order doublet" with J_app: a multiplet
+    t = re.sub(r"^nfo[dtqm]{1,3}$", "m", t)     # v2.1.2: Hoye's nfod/nfot/nfom ("non-first-order doublet/triplet/
+                                                # multiplet", splitting given as J_app): a multiplet
     t = re.sub(r"^(?:stack|overlapping\s+m(?:ultiplets?)?|overlapped\s+m|overlap|mc|m\s?c)$", "m", t)   # v2.1: "stack" (UK), "mc" (DE) = m
     t = re.sub(r"^[ab]\s+of\s+(?:an?\s+)?ab(?:\s+(?:system|quartet|q))?$", "ab", t)       # "A of AB", "B of AB"
     t = re.sub(r"^multiple\s+peaks$", "m", t)
@@ -294,6 +298,7 @@ def parse_signal(m):
     for ch in J_CHAIN.finditer(inner):
         sig["Jeq"] += len(re.findall(r"J", ch.group(1))) - 1
     inner = J_CHAIN.sub(lambda ch: "J = " + ch.group(2), inner)
+    inner = J_SUM.sub("J_app", inner) if "+" in inner else inner                       # v2.1.2
     # v2.1: an assignment in brackets after a constant: "J = 6.7 (eqB–axA), 6.7 (eqB–axC), 1.2 Hz"
     inner = J_ASSIGNED.sub(r"\1", inner)
     rest = inner
