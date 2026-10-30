@@ -15,7 +15,15 @@ Possible partners are counted generously (upper bound), by the number of bonds b
 Geminal partners are counted only in CH2 groups (in CH3 they are equivalent). Protons on N and O
 count as partners. The order in which the constants are written is not trusted: the reading that
 needs the fewest partners is taken. Signals with m, app, br, J_app, and molecules with nuclei that
-split without being counted here (D, B, metals, NH4+-type N) are not checked."""
+split without being counted here (D, B, metals, NH4+-type N) are not checked.
+
+v2.1.3: a lower bound for methyl groups. A CH3 bonded to a carbon that carries a proton (CH3-CH, CH3-CH2,
+CH3-CH=) is always split (3J about 6-7 Hz), so it cannot be reported as a singlet. Without an assignment
+the script checks the singlets of 3, 6, 9 ... H below 4.5 ppm: each must be explained by groups of the
+structure that can give a singlet (topologically equivalent CH3, CH2, CH or XH groups with no proton on a
+neighbouring carbon), each group used once. If they cannot all be explained and the structure has a methyl
+group that must be split, the verdict is "candidate (check)". Broad singlets, apparent ones and mixtures
+are not counted."""
 
 from itertools import permutations
 
@@ -156,6 +164,116 @@ def needs(counts, js):
     return best
 
 
+METHYL_SINGLET_MAX = 4.5    # ppm: singlets of 3n H below this are taken as CH3 groups (v2.1.3)
+# rough shift bands of a CH3 by its neighbour, used only to choose which singlet to name in the finding
+METHYL_BANDS = {"O": (3.0, 4.5), "N": (2.0, 3.7), "S": (1.7, 2.9)}
+METHYL_BAND_OTHER = (-1.0, 3.2)
+EXPLAIN_BUDGET = 200000      # steps of the search; beyond this the check gives no finding
+
+
+def singlet_groups(mol, hs):
+    """Groups that can give a singlet, one per heavy atom (diastereotopic CH3 of SiMe2, of an acetonide or of
+    a C(CH3)2 give separate singlets): {atom: (H, CH3 neighbour symbol or None, envelope)}, and whether the
+    structure has a CH3 that must be split. A CH3 next to a carbon with H is not a singlet group, except when
+    that carbon is bonded to Si (TIPS, TES: CH and CH3 nearly isochronous, deceptively simple). Envelope
+    groups (sp3 CH2/CH next to a carbon with H) can only take a part of a singlet of 6 H or more (the CH2
+    envelope of a long chain written as "s")."""
+    groups, must_split = {}, False
+    for a, n in hs.items():
+        atom = mol.GetAtomWithIdx(a)
+        if atom.GetIsAromatic():
+            continue
+        cnb = [nb for nb in atom.GetNeighbors() if nb.GetSymbol() == "C" and hs.get(nb.GetIdx(), 0)]
+        if atom.GetSymbol() == "C" and cnb:
+            if n == 3 and not any(x.GetSymbol() == "Si" for nb in cnb for x in nb.GetNeighbors()):
+                must_split = True
+            elif n == 3:
+                groups[a] = (n, "C", False)
+            elif atom.GetHybridization() == Chem.HybridizationType.SP3:
+                groups[a] = (n, None, True)
+            continue
+        nbs = [nb.GetSymbol() for nb in atom.GetNeighbors()]
+        kind = (nbs[0] if nbs and nbs[0] in METHYL_BANDS else "C") if atom.GetSymbol() == "C" and n == 3 else None
+        groups[a] = (n, kind, False)
+    return groups, must_split
+
+
+def in_band(kind, shift):
+    lo, hi = METHYL_BANDS.get(kind, METHYL_BAND_OTHER) if kind else (-1.0, METHYL_SINGLET_MAX)
+    return lo <= shift <= hi
+
+
+def explain(sigs, groups, bands):
+    """Largest number of the singlets that can be explained by distinct groups (subset sums of the H)."""
+    keys = list(groups)
+    best = [0, list(range(len(sigs)))]
+    budget = [EXPLAIN_BUDGET]
+
+    def go(k, used, done, left):
+        budget[0] -= 1
+        if budget[0] < 0:                          # too many combinations: do not decide (no finding)
+            best[0] = len(sigs)
+            return
+        if done + (len(sigs) - k) <= best[0]:
+            return
+        if k == len(sigs):
+            best[0], best[1] = done, left[:]
+            return
+        s = sigs[k]
+        need = s["nH"]
+        free = [g for g in keys if g not in used and (not groups[g][2] or need >= 6 - 0.01)
+                and (not bands or in_band(groups[g][1], s["shift"]))]
+
+        def subsets(i, total, chosen):
+            budget[0] -= 1
+            if budget[0] < 0:
+                return
+            if abs(total - need) < 0.01:
+                yield chosen
+                return
+            if total > need or i == len(free):
+                return
+            yield from subsets(i + 1, total + groups[free[i]][0], chosen + [free[i]])
+            yield from subsets(i + 1, total, chosen)
+        for ch in subsets(0, 0, []):
+            go(k + 1, used | set(ch), done + 1, left)
+            if best[0] == len(sigs):
+                return
+        go(k + 1, used, done, left + [k])
+
+    go(0, frozenset(), 0, [])
+    return best[0], best[1]
+
+
+def methyl_singlets(sigs, mol, hs):
+    """v2.1.3: (checked, findings) for singlets of 3n H that only a methyl group with a vicinal proton could give."""
+    groups, must_split = singlet_groups(mol, hs)
+    if not must_split:
+        return False, []
+    sing = [k for k, s in enumerate(sigs) if s["mult"] == "s" and not s["br"] and not s["app"] and s["nH"]
+            and s["shift"] < METHYL_SINGLET_MAX]
+    idx = [k for k in sing if sigs[k]["nH"] >= 3 - 0.01 and abs(sigs[k]["nH"] / 3 - round(sigs[k]["nH"] / 3)) < 0.01]
+    if not idx:
+        return False, []
+    rest = [k for k in sing if k not in idx]
+    # every singlet below 4.5 ppm takes its own groups; only a shortfall that the singlets of 3n H add counts
+    n_all, _ = explain([sigs[k] for k in rest + idx], groups, bands=False)
+    n_rest, _ = explain([sigs[k] for k in rest], groups, bands=False)
+    if len(rest) + len(idx) - n_all <= len(rest) - n_rest:
+        return True, []
+    # name the singlets without which the others can be explained (within the rough shift bands if possible)
+    allk = rest + idx
+
+    def fits(drop, bands):
+        keep = [k for k in allk if k != drop]
+        return len(keep) - explain([sigs[k] for k in keep], groups, bands)[0] <= len(rest) - n_rest
+    named = [k for k in idx if fits(k, True)] or [k for k in idx if fits(k, False)] or idx
+    which = "this methyl singlet" if len(named) == 1 else "one of these methyl singlets"
+    refs = ", ".join(f"#{k + 1} {sigs[k]['shift']:.2f} (s, {sigs[k]['nH']:g}H)" for k in named)
+    return True, [f"{refs}: {which} can be given by no group of the structure - the groups that can be singlets "
+                  f"are taken by other singlets, and a CH3 next to a carbon with H is split (3J about 7 Hz)"]
+
+
 def check_item4b(sigs, mol, mixture=False):
     """(verdict, findings). Verdict: 'consistent', 'candidate (check)', 'not checked: ...'."""
     if mol is None:
@@ -183,6 +301,9 @@ def check_item4b(sigs, mol, mixture=False):
             found.append(f"#{k} {s['shift']:.2f} ({s['mult']}, J = {', '.join(s['J'] + s['Jhet'])}): needs "
                          f"{need[0]} partner(s) within 3 bonds, {need[1]} within 4, {need[2]} in all; "
                          f"no proton of the structure at this shift has that many (best: {best[0]}/{best[1]}/{best[2]})")
+    checked, me = methyl_singlets(sigs, mol, hs)                              # v2.1.3
+    n_checked += checked
+    found += me
     if found:
         return "candidate (check)", "\n".join(found)
     return ("consistent" if n_checked else "nothing to check"), ""

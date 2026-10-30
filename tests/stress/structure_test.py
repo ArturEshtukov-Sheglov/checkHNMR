@@ -8,6 +8,8 @@ neighbours (3 bonds; one letter per neighbouring group: 1H d, 2H t, 3H q; more t
 
   clean     : expected item 1 consistent, item 4(b) not flagged
   h_wrong   : the integral of one signal changed by 1-3     -> item 1 inconsistent
+  methyl_s  : (v2.1.3) the signal of a CH3 next to a carbon with H (d, t, ...) is written as a singlet
+              -> item 4(b) candidate (lower bound for methyl groups)
   mult_more : one signal gets two more partners than its proton can have (extra "t", J >= 6 Hz)
               -> item 4(b) candidate (an upper-bound check: misses are expected when another proton
               of the same kind could have that many partners)
@@ -149,12 +151,19 @@ def main(n, seed=1):
         if not b:
             continue
         mol, sigs = b
-        kind = rng.choice(["clean", "h_wrong", "mult_more"])
+        kind = rng.choice(["clean", "h_wrong", "methyl_s", "mult_more"])
         if kind == "h_wrong":
             k = rng.randrange(len(sigs)); old = sigs[k]["nH"]
             sigs[k] = dict(sigs[k], nH=max(1, old + rng.choice([-2, -1, 1, 2, 3])))
             if sigs[k]["nH"] == old:
                 continue
+        if kind == "methyl_s":                       # v2.1.3
+            cand = [k for k, s in enumerate(sigs) if s["mult"] not in ("s", "m", "br s") and s["nH"] % 3 == 0
+                    and mol.GetAtomWithIdx(next(i for i, g in enumerate(Chem.CanonicalRankAtoms(mol, breakTies=False, includeChirality=False)) if g == s["g"])).GetTotalNumHs() == 3]
+            if not cand:
+                continue
+            k = rng.choice(cand)
+            sigs[k] = dict(sigs[k], mult="s", J=[])
         if kind == "mult_more":
             cand = [k for k, s in enumerate(sigs) if s["mult"] not in ("m", "br s") and len(s["J"]) < 3]
             if not cand:
@@ -181,7 +190,7 @@ def main(n, seed=1):
     json.dump(dict(stats={k: dict(v) for k, v in st.items()}, examples=ex), open(f"structure_{n}_{seed}.json", "w"),
               ensure_ascii=False, indent=1)
     print(f"N = {n}, seed {seed}")
-    for k in ("clean", "h_wrong", "mult_more"):
+    for k in ("clean", "h_wrong", "methyl_s", "mult_more"):
         c = st[k]; m = max(c["n"], 1)
         print(f"{k:10s} n={c['n']:6d}  item 1 flagged {c['item1_flag']} ({100*c['item1_flag']/m:.1f} %), "
               f"item 4(b) flagged {c['item4b_flag']} ({100*c['item4b_flag']/m:.1f} %), "

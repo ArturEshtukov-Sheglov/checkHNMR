@@ -1,7 +1,7 @@
 README - count_1H_descriptions.py
 =================================
 
-checkHNMR, local version V2.1.2-beta (see VERSION and CHANGELOG.md in the main folder for the
+checkHNMR, local version V2.1.3-beta (see VERSION and CHANGELOG.md in the main folder for the
 changes since version 1.1, which this description was first written for)
 
 Author: Artur V. Eshtukov-Shcheglov

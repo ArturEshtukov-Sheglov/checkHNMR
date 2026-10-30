@@ -1,7 +1,7 @@
 {
   "title": "checkHNMR: consistency checks of 1H NMR descriptions (local version)",
   "upload_type": "software",
-  "version": "V2.1.2-beta",
+  "version": "V2.1.3-beta",
   "description": "<p>checkHNMR checks that the numbers in a <sup>1</sup>H NMR description agree with each other and with the structure (checklist items 1, 3, 4 and 6 of the checklist in doi:10.26434/chemrxiv.15010060). It cannot tell whether the data were actually measured: only the raw data (FID) can show that.</p><p>This is the local version of the checkHNMR website (https://checkhnmr.org): it reads Supporting Information PDF files, makes structures from compound names (OPSIN) and writes Excel and Word reports. Beta: accuracy is measured only on test articles not used in development (protocol: doi:10.17605/OSF.IO/EQ9AH).</p><p>The code was written with the assistance of Claude Opus 5.5 (Anthropic) and was reviewed and tested by the author.</p>",
   "creators": [
     {

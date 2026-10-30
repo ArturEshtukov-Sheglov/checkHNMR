@@ -216,6 +216,9 @@ def selftest(n):
     m = re.search(r"h_wrong .*?item 1 flagged \d+ \(([\d.]+) %\)", txt3)
     row("item 1: wrong integral found", (m.group(1) + " %") if m else "?", bool(m) and float(m.group(1)) >= 85,
         ">= 85 % (one H fewer with an NH/OH: subcategory)")
+    m = re.search(r"methyl_s .*?item 4\(b\) flagged \d+ \(([\d.]+) %\)", txt3)            # v2.1.3
+    row("item 4(b): methyl singlet next to C-H found", (m.group(1) + " %") if m else "?", bool(m) and float(m.group(1)) >= 90,
+        ">= 90 % (lower bound for methyl groups)")
     m = re.search(r"mult_more .*?item 4\(b\) flagged \d+ \(([\d.]+) %\)", txt3)
     if m:
         rows.append(("item 4(b): too many partners found", m.group(1) + " %", "info", "upper bound only"))

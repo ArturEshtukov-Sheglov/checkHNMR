@@ -1,7 +1,7 @@
 README - check_descriptions.py
 ==============================
 
-checkHNMR, local version V2.1.2-beta (see VERSION and CHANGELOG.md in the main folder for the
+checkHNMR, local version V2.1.3-beta (see VERSION and CHANGELOG.md in the main folder for the
 changes since version 1.1, which this description was first written for)
 
 Author: Artur V. Eshtukov-Shcheglov
@@ -173,13 +173,29 @@ inconsistencies (19 recorded under item 4(b) in the reference, 19 under other
 items), and found 19 of the 48 item-4(b) findings of the reference; the others
 need an assignment. Not part of the frozen version used in the paper.
 
-Not checked: items 2 (chemical shifts), 7 (apparent multiplicity) and the subcategory "flexible
+Version 2.1.3: item 4(b) also has a lower bound for methyl groups. A CH3 next
+to a carbon that carries a proton (CH3-CH, CH3-CH2, CH3-CH=) is always split
+(3J about 7 Hz). Every singlet below 4.5 ppm must be given by its own groups of
+the structure that can be singlets (CH3 on a quaternary or aromatic carbon, on
+C=O, O, N, S or Si; isolated CH2, CH and XH; for singlets of 6 H or more also
+the CH2 envelope of a chain); if the singlets of 3, 6, 9 ... H cannot all be
+explained and the structure has a CH3 that must be split, the verdict is
+"candidate (check)" and the finding names the singlet(s) that may be the
+wrong one. Diastereotopic CH3 (SiMe2 of TBS, acetonides, C(CH3)2) may give two
+singlets; CH3 next to a CH or CH2 bonded to Si (TIPS, TES) is not counted
+(deceptively simple). Broad singlets and mixtures are not counted. On 5,120
+development descriptions with structures (J. Org. Chem. 2024-2025) it gave 34
+findings: real errors of the description (e.g. "4.37 (q, J = 7.1 Hz, 1H) ...
+1.44 (s, 3H)" for CH-CH3), structures that do not match the description, and
+mixtures not declared; the other items did not change.
+
+Not checked: items 2 (chemical shifts), 5 (couplings and resolution), 7 (apparent multiplicity) and the subcategory "flexible
 chain" under 6(a): flexible open-chain fragments X-CH2-CH2-Y, including the
 terminal CH3 of n-pentyl and longer chains (see Limitations).
 
 In short: a red verdict is almost always a real finding that needs only to be
-confirmed; a green verdict under item 3 is not a guarantee; items 2 and 7 (and
-4(b) beyond the upper bound) are always assessed by a person.
+confirmed; a green verdict under item 3 is not a guarantee; items 2, 5 and 7
+(and 4(b) beyond what it checks) are always assessed by a person.
 
 
 3. Requirements
@@ -238,8 +254,8 @@ determined):
                 TO CHECK BY HAND: items ... - nothing inconsistent found, but
                   some items could not be decided;
                 NO INCONSISTENCY FOUND by the automatic checks - this does not
-                  mean that the description is correct: items 2 and 7
-                  are not checked, 4(b) only as an upper bound, and item 3
+                  mean that the description is correct: items 2, 5 and 7
+                  are not checked, 4(b) only in part, and item 3
                   can be missed.
     item 1      consistent / subcategory: exchangeable proton not reported /
                 subcategory: protons on quadrupolar nuclei not reported (B-H, v2.1) /

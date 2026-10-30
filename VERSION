@@ -1,6 +1,6 @@
-V2.1.2-beta (2026-10-30)
-Reading of the non-first-order notation of Tang, Xu and Hoye (Molecules 2025, 30, 2610): nfod, nfot, nfom
-with J_app, and a sum of constants written as the splitting (J_o + J_p), is read as an apparent value.
-No change on 7,745 published descriptions used for regression (signals and verdicts identical).
+V2.1.3-beta (2026-10-31)
+Item 4(b) also has a lower bound for methyl groups: a methyl singlet that only a CH3 next to a carbon with H
+could give is reported for a person to check. The Excel table and the Word report list items 2, 5 and 7 as
+"not checked". No change on 7,745 published descriptions without structures used for regression.
 A beta until its accuracy is measured on the test articles of the second data set (OSF Update 3).
 Not the version used in the paper (frozen 17.10c / v1.1, see CHANGELOG.md).

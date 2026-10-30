@@ -3,6 +3,37 @@
 All notable changes to the tools. Newest first. For every version: what changed and whether it
 changes the results. Dates are those of the code; the version used in the paper is marked.
 
+## 2026-10-31 — V2.1.3-beta (one new check in item 4(b); items 2, 5 and 7 in the reports)
+
+Changes that **change results** (item 4(b), only for descriptions with a structure):
+- `item4b.py`: a lower bound for methyl groups. A CH3 next to a carbon that carries a proton (CH3-CH,
+  CH3-CH2, CH3-CH=) is always split (3J about 7 Hz). Every singlet below 4.5 ppm must be given by its own groups
+  of the structure that can be singlets (CH3 on a quaternary or aromatic carbon, on C=O, O, N, S or Si; isolated
+  CH2, CH and XH; for singlets of 6 H or more also the CH2 envelope of a chain). If the singlets of 3, 6, 9 ... H
+  cannot all be explained and the structure has a CH3 that must be split, item 4(b) is "candidate (check)" and
+  the finding names the singlet(s) that may be the wrong one. Diastereotopic CH3 (SiMe2, acetonides, C(CH3)2)
+  may give two singlets; CH3 next to a CH or CH2 bonded to Si (TIPS, TES) is not counted; broad singlets and
+  mixtures are not counted. Found while writing the paper on checkHNMR, on a development SI (ja6c10875,
+  "1.15 (s, 3H)" for the CH3 on an aziridine CH).
+- Development check: 5,120 descriptions with structures from 300 J. Org. Chem. 2024-2025 articles (development
+  data): 34 descriptions get the new finding (real errors of the description, structures from names that do not
+  match the description, mixtures not declared); no other item changed. 7,745 descriptions without structures
+  (Org. Lett. and Beilstein J. Org. Chem. SI, regression only): 0 changed.
+
+Changes that **do not change results**:
+- `excel_output.py`: columns "item 2", "item 5" and "item 7" with "not checked" (grey), in the order of the
+  checklist; the conclusion "NO INCONSISTENCY FOUND" now says "items 2, 5 and 7 are not checked; 4(b) only in
+  part".
+- `review_to_word/export_docx.py`: the table of every compound lists items 1-7 in order; items 2, 5 and 7 are
+  grey rows "not checked" with the reason; item 5 added to the legend page.
+- Structure stress test: a new error, "methyl_s" (the signal of a CH3 next to a carbon with H written as a
+  singlet), and a self-test row for it (expected >= 90 %).
+- Tests: `tests/test_v213_fixes.py` (4 tests; 90 unit tests in all). Self-test with 100,000 synthetic descriptions
+  per test: all pass (summary in `docs/selftest_V2.1.3-beta_100k.txt`); the new error is found in 95.6 % of cases,
+  with no false findings on correct descriptions.
+- Website (Pyodide + RDKit.js) and Python: identical verification codes and item-4(b) verdicts on the 5,120
+  development descriptions with structures.
+
 ## 2026-10-30 — V2.1.2-beta (one reading fix in the check scripts)
 
 Changes that **change results** only for descriptions written in the non-first-order notation of Tang, Xu and

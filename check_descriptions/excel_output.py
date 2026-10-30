@@ -12,16 +12,18 @@ from verdicts import W, conclusion_text
 
 # ===== Constants =====
 
-COLS = ["id", "conclusion", "item1", "item3", "item3_in6", "item4a", "item4b", "item6", "item6a", "item6b",
+COLS = ["id", "conclusion", "item1", "item2", "item3", "item3_in6", "item4a", "item4b", "item5", "item6", "item6a", "item6b",
+        "item7",
         "findings1", "findings3", "findings4a", "findings4b", "findings6a", "findings6b",
         "H_reported", "H_structure", "freq", "n_signals", "note", "info", "smiles", "description",
         "reading", "reading_notes"]                  # v2.1: how completely the description was read (at the end)
-WIDTH = dict(id=24, conclusion=44, item1=20, item3=20, item3_in6=16, item4a=13, item4b=16, item6=15, item6a=15, item6b=17,
+WIDTH = dict(id=24, conclusion=44, item1=20, item2=12, item5=12, item7=12, item3=20, item3_in6=16, item4a=13, item4b=16, item6=15, item6a=15, item6b=17,
              findings1=30, findings3=48, findings4a=32, findings4b=48, findings6a=48, findings6b=48, H_reported=10,
              H_structure=10, freq=7, n_signals=8, note=26, info=40, smiles=30, description=90,
              reading=9, reading_notes=40)
 DEFAULT_WIDTH = 12
 HEAD = dict(conclusion="conclusion\n(human verification required)", item1="item 1\nproton count",
+            item2="item 2\nshifts", item5="item 5\nresolution", item7="item 7\napparent\nmultiplicity",
             item3="item 3\npartners", item3_in6="item 3 finding\nonly in signals\nnot first-order (6)",
             item4a="item 4(a)\nnumber of J", item4b="item 4(b)\npartners in\nstructure (v2)", item6="item 6\nfirst order\n(a or b)", item6a="6(a)\nmagn. non-equiv.",
             item6b="6(b)\nstrong coupling", findings1="findings 1", findings3="findings 3",
@@ -42,6 +44,8 @@ CHOICES = dict(
     item6a=["consistent", "inconsistent", "candidate (check)", "no structure"],
     item6b=["consistent", "inconsistent", "borderline (subcategory)", "cannot be determined",
             "no pair (nothing to check)", "not applicable (6(a))"])
+# v2.1.3: items of the checklist that the script does not check, shown so that the table lists items 1-7
+NOT_CHECKED = dict(item2="not checked", item5="not checked", item7="not checked")
 VERDICT_COLUMNS = ("item1", "item3", "item3_in6", "item4a", "item4b", "item6", "item6a", "item6b")
 
 # colours
@@ -138,7 +142,8 @@ def write_checked(ws, rows_out, col):
     ws.row_dimensions[1].height = HEADER_HEIGHT
 
     for res in rows_out:
-        ws.append([show(res.get(c)) if c.startswith("item") else res.get(c) for c in COLS])
+        ws.append([NOT_CHECKED[c] if c in NOT_CHECKED else show(res.get(c)) if c.startswith("item") else res.get(c)
+                   for c in COLS])
         r = ws.max_row
         # the conclusion and item 6 are formulas: a verdict corrected by hand updates them
         ws[f"{col['conclusion']}{r}"] = x_conclusion(col, r)
@@ -152,6 +157,8 @@ def write_checked(ws, rows_out, col):
             if c.startswith("item"):
                 if c == "item6":
                     cell.font = Font(bold=True)
+                if c in NOT_CHECKED:
+                    cell.fill = fill(GREY)
                 cell.alignment = Alignment(wrap_text=True, vertical="top", horizontal="center")
             if c.startswith("findings"):
                 txt = str(cell.value or "")
@@ -243,7 +250,7 @@ def write_summary(sm, col, last, rows_out, sheet1):
     names = [("item1", "1  proton count"),
              ("item3", "3  coupling partners"),
              ("item4a", "4(a)  number of J"),
-             ("item4b", "4(b)  partners in the structure (upper bound, v2)"),
+             ("item4b", "4(b)  partners in the structure (in part)"),
              ("item6", "6  first-order notation (a or b)"),
              ("item6a", "   6(a)  magnetic non-equivalence"),
              ("item6b", "   6(b)  strong coupling")]

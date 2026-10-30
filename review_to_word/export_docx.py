@@ -213,6 +213,7 @@ CRIT = {
 # partner unverifiable / cannot be determined, green = consistent.
 SHADE = {"inconsistent": "F4CCCC", "consistent": "D9EAD3"}
 SHADE_OTHER = "FFF2CC"
+GREY_SHADE = "EDEDED"            # v2.1.3: items not checked by the script
 
 
 # ---------------------------------------------------------------- helpers
@@ -667,11 +668,26 @@ TOOL_ITEMS = [  # (item, verdict header start, findings header start)
     ("6(a)", "6(a)", "findings 6(a)"),
     ("6(b)", "6(b)", "findings 6(b)"),
 ]
+# v2.1.3: items of the checklist that the script does not check; shown as rows "not checked" in their place
+TOOL_NOT_CHECKED = {  # item: placed after this item
+    "2": "1", "5": "4(b)", "7": "6(b)"}
+TOOL_NOT_CHECKED_TEXT = {
+    "ru": {"2": "В этой версии не проверяется (планируется): нужны диапазоны сдвигов для фрагментов структуры.",
+           "5": "В этой версии не проверяется (планируется): нужна ширина линии, которой нет в описании.",
+           "7": "Не проверяется: нужно отнесение сигналов.",
+           "verdict": "не проверяется"},
+    "en": {"2": "Not checked in this version (planned): needs reference shift ranges for the fragments of the structure.",
+           "5": "Not checked in this version (planned): needs the line width, which a description does not give.",
+           "7": "Not checked: needs an assignment of the signals.",
+           "verdict": "not checked"},
+}
 TOOL_NAMES = {
-    "ru": {"1": "Сигналы и число протонов", "3": "Партнёры по КССВ", "4(a)": "Число КССВ",
+    "ru": {"1": "Сигналы и число протонов", "2": "Химические сдвиги", "5": "КССВ и разрешение",
+           "7": "Кажущаяся мультиплетность", "3": "Партнёры по КССВ", "4(a)": "Число КССВ",
            "4(b)": "Число партнёров (структура)",
            "6(a)": "Магнитная неэквивалентность", "6(b)": "Сильная связь"},
-    "en": {"1": "Signals and proton count", "3": "Coupling partners", "4(a)": "Number of J",
+    "en": {"1": "Signals and proton count", "2": "Chemical shifts", "5": "Couplings and resolution",
+           "7": "Apparent multiplicity", "3": "Coupling partners", "4(a)": "Number of J",
            "4(b)": "Partners in the structure",
            "6(a)": "Magnetic non-equivalence", "6(b)": "Strong coupling"},
 }
@@ -683,6 +699,7 @@ TOOL_TEXT = {
               ("3. Партнёры по КССВ", "У каждой КССВ есть сигнал-партнёр с той же КССВ."),
               ("4(a). Число КССВ", "Число КССВ соответствует мультиплетности (d – одна, dd – две и т. д.)."),
               ("4(b). Число партнёров*", "Мультиплетность не требует больше партнёров по КССВ, чем даёт структура."),
+              ("5. КССВ и разрешение*", "КССВ согласуются с разрешением спектра (шириной линии)."),
               ("6(a). Магнитная неэквивалентность", "Сигналы колец типа AA′XX′ (пара-дизамещённые бензолы и т. п.), записанные как первого порядка."),
               ("6(b). Сильная связь", "Пары сигналов с общей КССВ и Δν/J < 6 (6–8 – пограничный случай), записанные как первого порядка."),
               ("7. Кажущаяся мультиплетность*", "Мультиплетность, возникающая лишь при случайном равенстве КССВ с неэквивалентными соседями, помечена как кажущаяся (app, J_app) или приведена с отдельными КССВ.")],
@@ -696,7 +713,8 @@ TOOL_TEXT = {
         note4b="** Проверяется частично (версия 2): без отнесения скрипт проверяет, есть ли в структуре хоть один "
                "протон (подходящего типа для сдвига), у которого может быть такая мультиплетность; если нет – "
                "«кандидат (проверить)». Мультиплетность, невозможная именно для своего протона, но возможная для "
-               "другого, не обнаруживается."),
+               "другого, не обнаруживается. С версии 2.1.3 также нижняя граница для метилов: синглет 3, 6, 9… H, который "
+               "может дать только CH3 у углерода с протоном (такой CH3 расщеплён, ³J около 7 Гц), – «кандидат (проверить)»."),
     "en": dict(
         title="What the script checks",
         rows=[("1. Signals and proton count", "Sum of protons in the description vs protons of the structure (or formula)."),
@@ -704,6 +722,7 @@ TOOL_TEXT = {
               ("3. Coupling partners", "Every J has a partner signal with the same J."),
               ("4(a). Number of J", "The number of J values matches the multiplicity (d - one, dd - two, etc.)."),
               ("4(b). Number of partners*", "The multiplicity needs no more coupling partners than the structure provides."),
+              ("5. Couplings and resolution*", "The coupling constants are consistent with the resolution of the spectrum (line width)."),
               ("6(a). Magnetic non-equivalence", "AA'XX'-type ring signals (para-disubstituted benzenes etc.) reported as first order."),
               ("6(b). Strong coupling", "Pairs of signals with a shared J and Δν/J < 6 (6-8 borderline) reported as first order."),
               ("7. Apparent multiplicity*", "A multiplicity that arises only from accidentally equal couplings to non-equivalent neighbours is marked as apparent (app, J_app) or reported with separate J values.")],
@@ -717,7 +736,8 @@ TOOL_TEXT = {
         note4b="** Checked partly (version 2): without an assignment the script checks whether ANY proton of the "
                "structure (of a kind that fits the shift) could have this multiplicity; if none could - "
                "\"candidate (check)\". A multiplicity impossible for its own proton but possible for another one "
-               "is not found."),
+               "is not found. From version 2.1.3 also a lower bound for methyl groups: a singlet of 3, 6, 9 ... H that only a "
+               "CH3 next to a carbon with H could give (such a CH3 is split, 3J about 7 Hz) - \"candidate (check)\"."),
 }
 TOOL_VERDICT_RU = [  # (English start, Russian) - longest first
     ("inconsistent? (check)", "возможно несогласовано (проверить)"),
@@ -829,16 +849,26 @@ def export_checked(xlsx, out, a):
         for i, h in enumerate([t["item"], t["verdict"], t["comment"]]):
             tab.rows[0].cells[i].text = h
             tab.rows[0].cells[i].paragraphs[0].runs[0].bold = True
+        nc = TOOL_NOT_CHECKED_TEXT[a.lang]
+
+        def not_checked_rows(after):
+            for it2, prev in TOOL_NOT_CHECKED.items():
+                if prev == after:
+                    cells = tab.add_row().cells
+                    cells[0].text = f"{it2}. {names[it2]}"
+                    cells[1].text = nc["verdict"]
+                    cells[2].text = nc[it2]
+                    shade(cells[1], GREY_SHADE)
         for it, vi, fi in items:
-            if vi is None:
-                continue
-            v = "" if r[vi] is None else str(r[vi])
-            cells = tab.add_row().cells
-            cells[0].text = f"{it}. {names[it]}"
-            cells[1].text = tool_verdict(v, a.lang)
-            cells[2].text = "" if fi is None or r[fi] is None else greek(str(r[fi]))
-            if v:
-                shade(cells[1], tool_shade(v))
+            if vi is not None:
+                v = "" if r[vi] is None else str(r[vi])
+                cells = tab.add_row().cells
+                cells[0].text = f"{it}. {names[it]}"
+                cells[1].text = tool_verdict(v, a.lang)
+                cells[2].text = "" if fi is None or r[fi] is None else greek(str(r[fi]))
+                if v:
+                    shade(cells[1], tool_shade(v))
+            not_checked_rows(it)
         extra = " ".join(str(r[c[k]]) for k in ("note", "info") if c[k] is not None and r[c[k]])
         if extra:
             cells = tab.add_row().cells

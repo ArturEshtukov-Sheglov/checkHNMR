@@ -14,7 +14,7 @@ W = dict(cons="consistent", inc="inconsistent", chk="check", border="borderline"
               "in the SI or the raw data (FID) is advisable"),
          also=". Also to check by hand: ", also_pn=False,
          head_chk="TO CHECK BY HAND: ", tail_chk=" (no inconsistency found so far)",
-         nof="NO INCONSISTENCY FOUND by the automatic checks (items 2 and 7 are not checked; 4(b) only as an upper bound)")
+         nof="NO INCONSISTENCY FOUND by the automatic checks (items 2, 5 and 7 are not checked; 4(b) only in part)")
 
 SUBSTANTIVE = (("1", "item1"), ("3", "item3"), ("4(a)", "item4a"))      # items 1-4 checked by the script
 TO_CHECK = (("1", "item1"), ("3", "item3"), ("4(b)", "item4b"), ("6(a)", "item6a"))         # v2: 4(b)         # items that can be left to a person
