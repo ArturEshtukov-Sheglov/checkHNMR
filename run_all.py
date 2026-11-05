@@ -219,6 +219,9 @@ def selftest(n):
     m = re.search(r"methyl_s .*?item 4\(b\) flagged \d+ \(([\d.]+) %\)", txt3)            # v2.1.3
     row("item 4(b): methyl singlet next to C-H found", (m.group(1) + " %") if m else "?", bool(m) and float(m.group(1)) >= 90,
         ">= 90 % (lower bound for methyl groups)")
+    m = re.search(r"ch_methyl .*?item 4\(b\) flagged \d+ \(([\d.]+) %\)", txt3)           # v2.1.4
+    row("item 4(b): CH next to a CH3 doublet not a quartet found", (m.group(1) + " %") if m else "?",
+        bool(m) and float(m.group(1)) >= 90, ">= 90 % (missed when a multiplet without J could be the CH)")
     m = re.search(r"mult_more .*?item 4\(b\) flagged \d+ \(([\d.]+) %\)", txt3)
     if m:
         rows.append(("item 4(b): too many partners found", m.group(1) + " %", "info", "upper bound only"))

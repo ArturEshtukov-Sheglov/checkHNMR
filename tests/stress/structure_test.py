@@ -10,6 +10,8 @@ neighbours (3 bonds; one letter per neighbouring group: 1H d, 2H t, 3H q; more t
   h_wrong   : the integral of one signal changed by 1-3     -> item 1 inconsistent
   methyl_s  : (v2.1.3) the signal of a CH3 next to a carbon with H (d, t, ...) is written as a singlet
               -> item 4(b) candidate (lower bound for methyl groups)
+  ch_methyl : (v2.1.4) the CH next to a CH3 doublet is written as a doublet with the CH3 constant only
+              -> item 4(b) candidate (missed when a multiplet without J could be that CH)
   mult_more : one signal gets two more partners than its proton can have (extra "t", J >= 6 Hz)
               -> item 4(b) candidate (an upper-bound check: misses are expected when another proton
               of the same kind could have that many partners)
@@ -151,7 +153,7 @@ def main(n, seed=1):
         if not b:
             continue
         mol, sigs = b
-        kind = rng.choice(["clean", "h_wrong", "methyl_s", "mult_more"])
+        kind = rng.choice(["clean", "h_wrong", "methyl_s", "ch_methyl", "mult_more"])
         if kind == "h_wrong":
             k = rng.randrange(len(sigs)); old = sigs[k]["nH"]
             sigs[k] = dict(sigs[k], nH=max(1, old + rng.choice([-2, -1, 1, 2, 3])))
@@ -164,6 +166,16 @@ def main(n, seed=1):
                 continue
             k = rng.choice(cand)
             sigs[k] = dict(sigs[k], mult="s", J=[])
+        if kind == "ch_methyl":                      # v2.1.4
+            pairs = [(k, i) for k, s in enumerate(sigs) if s["mult"] == "d" and s["nH"] % 3 == 0
+                     for i, t in enumerate(sigs) if i != k and s["J"][0] in t["J"] and "q" in t["mult"]
+                     and t["nH"] in (1, s["nH"] // 3)]
+            if not pairs:
+                continue
+            k, i = rng.choice(pairs)
+            jm = round(rng.uniform(6.0, 7.6), 1)    # a realistic 3J(CH3, CH) (the generator draws 5.5-16 Hz)
+            sigs[k] = dict(sigs[k], J=[jm])
+            sigs[i] = dict(sigs[i], mult="d", J=[jm])
         if kind == "mult_more":
             cand = [k for k, s in enumerate(sigs) if s["mult"] not in ("m", "br s") and len(s["J"]) < 3]
             if not cand:
@@ -190,7 +202,7 @@ def main(n, seed=1):
     json.dump(dict(stats={k: dict(v) for k, v in st.items()}, examples=ex), open(f"structure_{n}_{seed}.json", "w"),
               ensure_ascii=False, indent=1)
     print(f"N = {n}, seed {seed}")
-    for k in ("clean", "h_wrong", "methyl_s", "mult_more"):
+    for k in ("clean", "h_wrong", "methyl_s", "ch_methyl", "mult_more"):
         c = st[k]; m = max(c["n"], 1)
         print(f"{k:10s} n={c['n']:6d}  item 1 flagged {c['item1_flag']} ({100*c['item1_flag']/m:.1f} %), "
               f"item 4(b) flagged {c['item4b_flag']} ({100*c['item4b_flag']/m:.1f} %), "

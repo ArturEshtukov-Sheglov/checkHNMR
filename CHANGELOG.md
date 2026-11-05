@@ -3,6 +3,39 @@
 All notable changes to the tools. Newest first. For every version: what changed and whether it
 changes the results. Dates are those of the code; the version used in the paper is marked.
 
+## 2026-11-05 — V2.1.4-beta (one new check in item 4(b); open-chain CH2-CH2 in item 6(a))
+
+Changes that **change results** (only for descriptions with a structure):
+- `item4b.py`: the proton next to a CH3 doublet. A CH3 reported as a doublet ("1.47 (d, J = 6.7 Hz, 3H)") shows
+  that its coupling to the CH is resolved, so that CH couples to three equivalent protons with this constant and
+  must show at least a quartet for it. If every signal that reports this constant shows fewer than three partners
+  for it ("4.38 (d, J = 6.5 Hz, 1H)", "2.42 (dd, J = 13.8, 6.9 Hz, 1H)" for the CH of an isopropyl group) and no
+  multiplet without constants, broad or apparent signal could be that CH, item 4(b) is "candidate (check)".
+  Applied when the structure has a CH3 bonded to a carbon with one H (not next to Si); the CH3 doublet has 3, 6 or
+  9 H below 4.5 ppm and one constant of 5.0-8.5 Hz; the CH is looked for among signals of 1 H (or n/3 H) up to
+  6.5 ppm (7.6 ppm if the CH can be =CH-CH3), with the constants compared with the tolerance of item 3. Protocol
+  v1.2 item 4(c) does not count a multiplicity with fewer partners than the structure gives, because a small
+  constant can stay unresolved; here the constant is resolved, since the partner shows it.
+- `structure_checks.py`: CH2-CH2 of an open chain (X-CH2-CH2-Y, including the inner CH2 of alkyl chains). If the
+  structure has no saturated-ring CH2-CH2 but has an open-chain one, CH2 signals (2 or 4 H, 0.5-4.8 ppm) written
+  with a first-order multiplicity that contains t, p or h and a coupling constant give item 6(a) "subcategory:
+  flexible chain" (protocol v1.2, item 6(a): formally AA'XX', usually deceptively simple; not an inconsistency).
+  Item 6 shows the subcategory unless 6(b) is inconsistent, borderline or cannot be determined. The conclusion
+  of a description does not change. A ring CH2-CH2 is still "candidate (check)", as before.
+- Development check: 5,120 descriptions with structures from 300 J. Org. Chem. 2024-2025 articles (development
+  data): 3 descriptions get the new item-4(b) finding (all real errors: a CH next to a CH3 written as "ddd" with
+  12.5 Hz, and two isopropyl CH septets written as "dt" or "dd" with twice the constant); 260 get the item-6(a)
+  subcategory; no other verdict and no conclusion changed.
+
+Changes that **do not change results**:
+- Structure stress test: a new error, "ch_methyl" (the CH next to a CH3 doublet written as a doublet), and a
+  self-test row for it (expected >= 90 %). Unit tests: tests/test_v214_fixes.py (10 tests, synthetic descriptions
+  only; 100 unit tests in all). Self-test with 100,000 synthetic descriptions per test (seed 20261023): all pass
+  (summary in `docs/selftest_V2.1.4-beta_100k.txt`); the new error is found in 93.4 % of cases, with no false
+  findings on correct descriptions. Realistic reading test (100,000 descriptions, seed 260626): 39 misread
+  (0.04 %), as V2.1.3-beta (the reading of descriptions did not change).
+- `excel_output.py`: "subcategory: flexible chain" in the choices of item 6(a) and in the item-6 formula.
+
 ## 2026-10-31 — V2.1.3-beta (one new check in item 4(b); items 2, 5 and 7 in the reports)
 
 Changes that **change results** (item 4(b), only for descriptions with a structure):

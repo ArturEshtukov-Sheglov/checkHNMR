@@ -1,7 +1,7 @@
 README - check_descriptions.py
 ==============================
 
-checkHNMR, local version V2.1.3-beta (see VERSION and CHANGELOG.md in the main folder for the
+checkHNMR, local version V2.1.4-beta (see VERSION and CHANGELOG.md in the main folder for the
 changes since version 1.1, which this description was first written for)
 
 Author: Artur V. Eshtukov-Shcheglov
@@ -189,9 +189,24 @@ findings: real errors of the description (e.g. "4.37 (q, J = 7.1 Hz, 1H) ...
 1.44 (s, 3H)" for CH-CH3), structures that do not match the description, and
 mixtures not declared; the other items did not change.
 
-Not checked: items 2 (chemical shifts), 5 (couplings and resolution), 7 (apparent multiplicity) and the subcategory "flexible
-chain" under 6(a): flexible open-chain fragments X-CH2-CH2-Y, including the
-terminal CH3 of n-pentyl and longer chains (see Limitations).
+Version 2.1.4: two more checks for descriptions with a structure.
+Item 4(b): the proton next to a CH3 doublet. A CH3 doublet (3, 6 or 9 H below
+4.5 ppm, one J of 5.0-8.5 Hz) shows that its coupling to the CH is resolved, so
+the CH must show at least a quartet for that constant. If every signal that
+reports the constant (1 H, up to 6.5 ppm; 7.6 ppm if =CH-CH3 is possible) shows
+fewer than three partners for it ("d", "dd", "t") and no multiplet without
+constants could be the CH, the verdict is "candidate (check)".
+Item 6(a): CH2-CH2 of an open chain (X-CH2-CH2-Y and the inner CH2 of alkyl
+chains) written with a first-order multiplicity (t, p, sext, td, tt ...) and J
+gives the subcategory "flexible chain" (protocol v1.2: formally AA'XX', usually
+deceptively simple; not an inconsistency), when the structure has no
+saturated-ring CH2-CH2. On 5,120 development descriptions with structures:
+3 new item-4(b) findings (all real errors), 260 subcategories, no other change.
+
+Not checked: items 2 (chemical shifts), 5 (couplings and resolution) and 7 (apparent multiplicity).
+The subcategory "flexible chain" under 6(a) is found only when the structure has
+no saturated-ring CH2-CH2 (otherwise the ring check lists the CH2 signals for a
+person to assign) (see Limitations).
 
 In short: a red verdict is almost always a real finding that needs only to be
 confirmed; a green verdict under item 3 is not a guarantee; items 2, 5 and 7
@@ -344,12 +359,15 @@ Strange findings in one description
   and item 1 is compared with the formula if one is given.
 - Item 6(a) lists candidate signals; the script does not assign signals to
   protons of the structure.
-- Flexible open-chain fragments (X-CH2-CH2-Y, including the terminal CH3 of
-  n-pentyl and longer chains, whose signal is perturbed by virtual coupling)
-  are not recognised: this would require assigning signals to structural
-  fragments. Such signals are recorded in a subcategory and are not counted
-  as inconsistencies, so the verdicts are not affected; only the size of the
-  subcategory is not reported by the script.
+- Flexible open-chain fragments (X-CH2-CH2-Y): since version 2.1.4 CH2 signals
+  in first-order notation are reported as the subcategory "flexible chain"
+  when the structure has an open-chain CH2-CH2 and no saturated-ring CH2-CH2.
+  Without an assignment the script cannot tell which CH2 signal belongs to
+  the chain, so a CH2 triplet of another fragment may be listed too; the
+  subcategory does not change the conclusion. The terminal CH3 of n-pentyl and
+  longer chains (perturbed by virtual coupling) is not recognised.
+- Item 4(b), proton next to a CH3 doublet (2.1.4): a CH that may hide in a
+  multiplet without constants, or a broad or apparent signal, is not checked.
 - A constant may be matched by chance to an unrelated signal with the same
   value; such a coupling is then taken as having a partner.
 - Coupling constants given only as subscript labels without values

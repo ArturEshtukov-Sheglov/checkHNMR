@@ -41,7 +41,7 @@ CHOICES = dict(
     item3=["consistent", "inconsistent", "inconsistent (check)", "partner unverifiable? (check)"],
     item4a=["consistent", "inconsistent"],
     item4b=["consistent", "candidate (check)", "inconsistent", "no structure"],
-    item6a=["consistent", "inconsistent", "candidate (check)", "no structure"],
+    item6a=["consistent", "inconsistent", "candidate (check)", "subcategory: flexible chain", "no structure"],
     item6b=["consistent", "inconsistent", "borderline (subcategory)", "cannot be determined",
             "no pair (nothing to check)", "not applicable (6(a))"])
 # v2.1.3: items of the checklist that the script does not check, shown so that the table lists items 1-7
@@ -117,8 +117,9 @@ def x_item6(col, r):
             f'IF(ISNUMBER(SEARCH("{W["chk"]}",{a})),"{W["chk"]}",'
             f'IF(ISNUMBER(SEARCH("{W["border"]}",{b})),"{W["border_full"]}",'
             f'IF(AND({b}="{W["cbd"]}",{a}="{W["cons"]}"),"{W["cbd"]}",'
+            f'IF(LEFT({a},{len(W["subcat"])})="{W["subcat"]}",{a},'
             f'IF({a}="{W["nostruct"]}",IF({b}="{W["cbd"]}","{only}{W["cbd"]}","{only}{W["cons"]}"),'
-            f'"{W["cons"]}")))))')
+            f'"{W["cons"]}"))))))')
 
 
 # ===== Sheet 'checked' =====

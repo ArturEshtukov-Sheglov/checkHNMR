@@ -90,6 +90,8 @@ def combine_item6(a, b):
         return "check" if "check" in a else "borderline (subcategory)"
     if b == "cannot be determined" and a in ("consistent", "no structure"):
         return "cannot be determined" if a == "consistent" else "6(b) only: cannot be determined"
+    if a.startswith("subcategory"):                                         # v2.1.4: flexible chain
+        return a
     if a == "no structure":
         return "6(b) only: " + ("consistent" if b != "cannot be determined" else b)
     return "consistent"

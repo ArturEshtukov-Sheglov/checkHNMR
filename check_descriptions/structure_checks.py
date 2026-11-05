@@ -37,6 +37,13 @@ PARTIAL = re.compile(r"characteristic (?:peaks|signals)|selected (?:peaks|signal
 NOT_OBSERVED = re.compile(r"not (?:been )?(?:observed|detected|visible|seen)|exchange|not assigned|overlap", re.I)
 # Two neighbouring CH2 groups in a saturated ring
 RING_CH2CH2 = Chem.MolFromSmarts("[CH2;R;!a]@-[CH2;R;!a]") if Chem else None
+# v2.1.4: open-chain CH2-CH2 (X-CH2-CH2-Y): formally AA'XX' (J != J' unless the rotamers are equally populated),
+# usually deceptively simple; protocol v1.2, item 6(a): subcategory "formally non-first-order, flexible chain"
+CHAIN_CH2CH2 = Chem.MolFromSmarts("[CH2;!R;X4]-[CH2;!R;X4]") if Chem else None
+CHAIN_SUBCAT = "subcategory: flexible chain"
+CHAIN_LETTERS = ("t", "p", "h")
+CHAIN_NOTE = ("CH2-CH2 (formally AA'XX', usually deceptively simple; a subcategory, not an inconsistency); "
+              "CH2 signals in first-order notation with J: ")
 # Other protons that can appear at 6-9.6 ppm as "d, J": vinyl/aldehyde C-H, NH, OH
 OTHER_LOWFIELD = Chem.MolFromSmarts("[$([CX3;!a;!H0]),$([#7,#8;!H0])]") if Chem else None
 
@@ -226,6 +233,17 @@ def check_item6a(sigs, mol):
         if cand:
             lines.append("ring CH2-CH2; CH2 signals with J (ring or chain?): " + "; ".join(cand))
 
+    chain = []
+    if not sat and CHAIN_CH2CH2 is not None and mol.HasSubstructMatch(CHAIN_CH2CH2):                # v2.1.4
+        chain = [f"#{k} {s['shift']:.2f} ({'app ' if s['app'] else ''}{s['mult']}, J = {', '.join(s['J'])}, {fmt_n(s['nH'])}H)"
+                 for k, s in enumerate(sigs, 1)
+                 if SATURATED_RANGE[0] <= s["shift"] <= SATURATED_RANGE[1] and s["mult"] not in (None, "m", "s")
+                 and any(c in s["mult"] for c in CHAIN_LETTERS) and s["J"] and not s["Japp"]
+                 and (s["nH"] or 0) in CH2_PROTONS]
     if certain_hit:
-        return "inconsistent", "\n".join(lines), idx
-    return ("candidate (check)" if lines else "consistent"), "\n".join(lines), set()
+        return "inconsistent", "\n".join(lines + (["open-chain " + CHAIN_NOTE + "; ".join(chain)] if chain else [])), idx
+    if lines:
+        return "candidate (check)", "\n".join(lines + (["open-chain " + CHAIN_NOTE + "; ".join(chain)] if chain else [])), set()
+    if chain:
+        return CHAIN_SUBCAT, "open-chain " + CHAIN_NOTE + "; ".join(chain), set()
+    return "consistent", "", set()

@@ -274,6 +274,63 @@ def methyl_singlets(sigs, mol, hs):
                   f"are taken by other singlets, and a CH3 next to a carbon with H is split (3J about 7 Hz)"]
 
 
+METHYL_DOUBLET_J = (5.0, 8.5)   # Hz: 3J of CH3-CH; a CH3 doublet outside this is more likely split by F or P
+CH3_CH = Chem.MolFromSmarts("[CH3]-[#6;H1;!$([#6][Si])]") if Chem else None   # CH of TIPS/TES: nearly isochronous
+HIDE_SP3 = 6.5      # ppm: a multiplet without J above this cannot be the CH next to a CH3 if that CH is sp3
+HIDE_SP2 = 7.6      # ppm: ... or if it can be =CH-CH3
+METHYL_PARTNER = "coupled to a CH3"   # v2.1.4: marker of these findings (own alert on the site)
+
+
+def methyl_partner(sigs, mol):
+    """v2.1.4: (checked, findings). A CH3 doublet ("1.47 (d, J = 6.7 Hz, 3H)") shows that the coupling to the CH
+    is resolved. The CH therefore couples to three equivalent protons with this J and must show at least a quartet
+    for it. If every signal that reports this J shows fewer than three partners for it ("4.38 (d, J = 6.5 Hz, 1H)")
+    and no multiplet without constants could be the CH, the multiplicity is impossible. Checked without an assignment."""
+    hits = mol.GetSubstructMatches(CH3_CH) if CH3_CH else ()
+    if not hits:
+        return False, []
+    sp2 = any(mol.GetAtomWithIdx(m[1]).GetHybridization() != Chem.HybridizationType.SP3 for m in hits)
+    hide_max = HIDE_SP2 if sp2 else HIDE_SP3
+    from text_checks import same_j, methyl_like
+    all_vals = [v for s in sigs for v in s["J"]]
+    checked, found = False, []
+    for k, s in enumerate(sigs):
+        n = s["nH"]
+        if not (s["mult"] == "d" and n and n >= 3 - 0.01 and abs(n / 3 - round(n / 3)) < 0.01 and len(s["J"]) == 1
+                and not s["Jhet"] and not s["app"] and not s["br"] and not s["Japp"] and s["shift"] < METHYL_SINGLET_MAX
+                and METHYL_DOUBLET_J[0] <= float(s["J"][0]) <= METHYL_DOUBLET_J[1]):
+            continue
+        jm = s["J"][0]
+        hidden, bad, ok = False, [], False
+        for i, t in enumerate(sigs):
+            if i == k:
+                continue
+            counts = partner_counts(t["mult"]) if t["mult"] else None
+            matching = [v for v in t["J"] if same_j(v, jm, all_vals)]
+            if t["mult"] in (None, "m") or t["app"] or t["br"] or t["Japp"] or (counts and len(counts) != len(t["J"] + t["Jhet"])):
+                if matching or (not t["J"] and t["mult"] != "s" and t["shift"] <= hide_max):
+                    hidden = True                    # the CH may be here: its multiplicity cannot be checked
+                continue
+            if not matching or counts is None or methyl_like(t) or not t["nH"] or t["shift"] > hide_max \
+                    or not any(abs(t["nH"] - x) < 0.01 for x in {1.0, round(n / 3)}):
+                continue        # the CH has 1 H (n/3 H: equivalent CH-CH3 units); another CH3 doublet = common CH
+            js = t["J"] + t["Jhet"]
+            most = max(sum(c for c, v in zip(perm, js) if v in matching) for perm in set(permutations(counts)))
+            if most >= 3:
+                ok = True
+            else:
+                bad.append((i, t, most))
+        if hidden or ok or not bad:
+            checked = checked or ok
+            continue
+        checked = True
+        refs = "; ".join(f"#{i + 1} {t['shift']:.2f} ({t['mult']}, J = {', '.join(t['J'] + t['Jhet'])}) shows "
+                         f"{m} partner(s) for this J" for i, t, m in bad)
+        found.append(f"#{k + 1} {s['shift']:.2f} (d, J = {jm} Hz, {n:g}H): a CH3 doublet, so its CH is {METHYL_PARTNER} "
+                     f"with a resolved J and must show at least a quartet for it; {refs}")
+    return checked, found
+
+
 def check_item4b(sigs, mol, mixture=False):
     """(verdict, findings). Verdict: 'consistent', 'candidate (check)', 'not checked: ...'."""
     if mol is None:
@@ -304,6 +361,9 @@ def check_item4b(sigs, mol, mixture=False):
     checked, me = methyl_singlets(sigs, mol, hs)                              # v2.1.3
     n_checked += checked
     found += me
+    checked, mp = methyl_partner(sigs, mol)                                   # v2.1.4
+    n_checked += checked
+    found += mp
     if found:
         return "candidate (check)", "\n".join(found)
     return ("consistent" if n_checked else "nothing to check"), ""

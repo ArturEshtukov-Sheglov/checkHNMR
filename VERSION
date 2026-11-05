@@ -1,6 +1,8 @@
-V2.1.3-beta (2026-10-31)
-Item 4(b) also has a lower bound for methyl groups: a methyl singlet that only a CH3 next to a carbon with H
-could give is reported for a person to check. The Excel table and the Word report list items 2, 5 and 7 as
-"not checked". No change on 7,745 published descriptions without structures used for regression.
+V2.1.4-beta (2026-11-05)
+Two new checks for descriptions with a structure. Item 4(b): the proton next to a CH3 doublet must show at least a
+quartet for that coupling ("d" or "dd" with the CH3 constant is impossible). Item 6(a): CH2-CH2 of an open chain
+in first-order notation is reported as the subcategory "formally non-first-order, flexible chain" (protocol v1.2),
+not as an inconsistency. Conclusions unchanged on 5,120 development descriptions with structures except 3 new
+item-4(b) findings (all real errors).
 A beta until its accuracy is measured on the test articles of the second data set (OSF Update 3).
 Not the version used in the paper (frozen 17.10c / v1.1, see CHANGELOG.md).
