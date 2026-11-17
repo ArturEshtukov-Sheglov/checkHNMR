@@ -16,7 +16,7 @@ W = dict(cons="consistent", inc="inconsistent", chk="check", border="borderline"
          head_chk="TO CHECK BY HAND: ", tail_chk=" (no inconsistency found so far)",
          nof="NO INCONSISTENCY FOUND by the automatic checks (items 2, 5 and 7 are not checked; 4(b) only in part)")
 
-SUBSTANTIVE = (("1", "item1"), ("3", "item3"), ("4(a)", "item4a"))      # items 1-4 checked by the script
+SUBSTANTIVE = (("1", "item1"), ("3", "item3"), ("4(a)", "item4a"), ("4(b)", "item4b"))   # items 1-4 checked by the script (v2.1.5: 4(b))
 TO_CHECK = (("1", "item1"), ("3", "item3"), ("4(b)", "item4b"), ("6(a)", "item6a"))         # v2: 4(b)         # items that can be left to a person
 
 

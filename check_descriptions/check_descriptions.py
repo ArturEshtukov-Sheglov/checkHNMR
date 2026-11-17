@@ -33,7 +33,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from description_parser import parse_mult, expected_j  # noqa: E402
 from text_checks import check, verdict_6b  # noqa: E402
-from item4b import check_item4b                                     # v2
+from item4b import check_item4b, checkable                          # v2
+from width_count import check_counting                              # v2.1.5
 from read_quality import reading_quality  # noqa: E402
 from structure_checks import (Chem, RDKIT_PROBLEM, check_item1, check_item1_formula, check_item6a,  # noqa: E402
                               aromatic_hx_possible, h_counts)
@@ -239,6 +240,15 @@ def check_row(r):
     if isinstance(res.get("H_reported"), float):
         # the sum of integrals is written rounded: 42.1, not 42.09999999999999
         res["H_reported"] = round(res["H_reported"], 6)
+
+    if mol is not None and res["item1"] == "consistent" and not res["_mixture"] and checkable(mol):    # v2.1.5
+        v, f = check_counting(res["_sigs"], r["description"], mol, res.get("freq"))
+        if v == "inconsistent":
+            res["item4b"], res["findings4b"] = v, "\n".join(x for x in (f, res["findings4b"]) if x)
+        elif v:
+            if res["item4b"] in ("consistent", "nothing to check"):
+                res["item4b"] = v
+            res["findings4b"] = "\n".join(x for x in (res["findings4b"], f) if x)
 
     q = reading_quality(r["description"], res["_sigs"])                        # v2.1
     res["reading"], res["reading_notes"] = q["level"], "; ".join(q["notes"])

@@ -92,12 +92,12 @@ def x_list(flags, labels):
 def x_conclusion(col, r):
     """Excel formula for the conclusion of row r; the same rule as verdicts.conclusion()."""
     c = {k: f"{col[k]}{r}" for k in col}
-    s = [x_inc(c["item1"]), x_inc(c["item3"]), x_inc(c["item4a"])]
+    s = [x_inc(c["item1"]), x_inc(c["item3"]), x_inc(c["item4a"]), x_inc(c["item4b"])]       # v2.1.5: 4(b)
     k = [x_check(c["item1"]), x_check(c["item3"]), x_check(c["item4b"]), x_check(c["item6a"])]
     n6 = x_inc(c["item6"])
     ns = "(" + "+".join(s) + ")"
     nk = "(" + "+".join(k) + ")"
-    subl = x_list(s, ["1", "3", "4(a)"])
+    subl = x_list(s, ["1", "3", "4(a)", "4(b)"])
     chkl = x_list(k, ["1", "3", "4(b)", "6(a)"])
     pn = lambda n, lst: f'IF({n}>1,"{W["items"]}","{W["item"]}")&{lst}'
     also = pn(nk, chkl) if W["also_pn"] else chkl
