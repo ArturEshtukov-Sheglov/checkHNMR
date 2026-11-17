@@ -34,7 +34,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from description_parser import parse_mult, expected_j  # noqa: E402
 from text_checks import check, verdict_6b  # noqa: E402
 from item4b import check_item4b, checkable                          # v2
-from width_count import check_counting                              # v2.1.5
+from width_count import check_counting, check_ranges                # v2.1.5
 from read_quality import reading_quality  # noqa: E402
 from structure_checks import (Chem, RDKIT_PROBLEM, check_item1, check_item1_formula, check_item6a,  # noqa: E402
                               aromatic_hx_possible, h_counts)
@@ -264,6 +264,15 @@ def check_row(r):
                 res[k] = W["na_noj"]
         if res["item6a"] in ("consistent", "no structure"):
             res["item6a"] = W["na_noj"]
+
+    if mol is not None and checkable(mol):                     # v2.1.5: range of the coupling constants
+        v, f = check_ranges(res["_sigs"], r["description"], mol)
+        if v == "inconsistent":
+            res["item4b"] = v
+        elif v and res["item4b"] in ("consistent", "nothing to check"):
+            res["item4b"] = v
+        if v:
+            res["findings4b"] = "\n".join(x for x in (res["findings4b"], f) if x)
 
     q = reading_quality(r["description"], res["_sigs"])                        # v2.1
     res["reading"], res["reading_notes"] = q["level"], "; ".join(q["notes"])

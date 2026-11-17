@@ -279,6 +279,113 @@ def width_bound(m, dist, benz, ranks, x, decoupled):
     return large - small + hetero, (jmax or None)
 
 
+# ===== Range of the coupling constants (v2.1.5) =====
+
+MAX_HH = 25.0             # Hz: no H-H coupling is larger (the rule of v2; used when a partner is not in Table 4)
+RANGE_TOL = 0.3           # Hz: tolerance of the upper bound, or the reporting step if larger
+OUT_OF_RANGE = "larger than any coupling of the protons that can stand at this shift"
+
+
+def range_max(m, dist, benz, x, decoupled, flip):
+    """Largest |J| that proton x can show: the upper bounds of Table 4 over its H partners; MAX_HH if an H-H partner
+    is not in Table 4 (within 4 bonds, or a homoallylic / zigzag 5-bond path) or x is on N, O or S; infinity if
+    an F or P is within 7 bonds and not decoupled (H-F and H-P couplings are not checked by range). flip: x is
+    one of a pair of ring protons made equivalent by the turning of the ring (an AA'XX'-type half: the reported
+    splitting can be N = J_ortho + J_para)."""
+    for xa in m.GetAtoms():
+        if xa.GetSymbol() in ("F", "P") and xa.GetSymbol() not in decoupled and dist[x][xa.GetIdx()] <= 7:
+            return float("inf")
+    c = m.GetAtomWithIdx(x).GetNeighbors()[0]
+    if c.GetSymbol() != "C":
+        return MAX_HH                                     # NH, OH, SH: partners not in Table 4
+    best = 0.0
+    for y in range(m.GetNumAtoms()):
+        if y == x or m.GetAtomWithIdx(y).GetSymbol() != "H":
+            continue
+        d = dist[x][y]
+        if d > 6:
+            continue
+        pb = pair_bounds(m, dist, benz, x, y)
+        if pb is None:
+            if d <= 4 or (d == 5 and zigzag_or_homoallylic(m, x, y)):
+                return MAX_HH
+            hi = FIVE_BOND_SMALL if d == 5 else 0.0
+        else:
+            lo, hi, large = pb
+            hi = max(abs(v) for v in (lo, hi) if v is not None)
+            if large and flip and d == 3 and any(c.GetIdx() in r for r in benz):
+                hi += PARA[1]                             # N = J_ortho + J_para
+        best = max(best, hi)
+    return best
+
+
+def check_ranges(sigs, desc, mol):
+    """Every reported constant must fit at least one coupling of the protons that can stand at the signal's shift:
+    J <= bound - no finding; bound < J <= bound + tolerance - 'candidate (check)'; beyond - 'inconsistent'.
+    tolerance = max(0.3 Hz, reporting step). Constants written as H-X couplings are not checked; constants above
+    25 Hz moved to H-X by size are, when the compound has F or P. Returns (verdict, findings) with verdict '', 'candidate (check)' or 'inconsistent'."""
+    if not any(sg["J"] or sg.get("Jhet_found") for sg in sigs):
+        return "", ""
+    m = Chem.AddHs(mol)
+    dec = decoupled_nuclei(desc)
+    dist = Chem.GetDistanceMatrix(m)
+    benz = benzenoid_rings(m)
+    hs = h_atoms(mol)
+    flip, memo = [None], {}
+
+    def flips():                                          # ring protons in pairs that the turning of the ring makes equivalent
+        if flip[0] is None:
+            flip[0] = {u["atom"] for u in units_of(m, dec) if u["g"] == 2}
+        return flip[0]
+
+    def bound(a, use_flip):
+        key = (a, use_flip and a in flips())
+        if key not in memo:
+            memo[key] = range_max(m, dist, benz, h_of(m, a)[0], dec, key[1])
+        return memo[key]
+
+    all_vals = [v for sg in sigs for v in sg["J"] + sg["Japp"]]
+    has_fp = any(a.GetSymbol() in ("F", "P") for a in mol.GetAtoms())
+    inc, cand = [], []
+    for n, sg in enumerate(sigs, 1):
+        if sg["shift"] is None:
+            continue
+        # constants above 25 Hz were moved to H-X by size; without F or P item 3 reports them (impossible)
+        vals = list(sg["J"]) + ([v for v in sg.get("Jhet_found", []) if float(v) > MAX_HH] if has_fp else [])
+        if not vals:
+            continue
+        mt = RANGE.match(sg.get("text") or "")
+        xs = (float(mt.group(1)), float(mt.group(2))) if mt else (sg["shift"],)
+        if not all(SHIFT_LIMITS[0] < x < SHIFT_LIMITS[1] for x in xs):
+            continue
+        win = set().union(*(candidates(mol, x, hs) for x in xs))
+        cap = sg.get("nH") or 0
+        cands = [a for a in win if h_of(m, a) and (not cap or (3 if len(h_of(m, a)) == 3 else 1) <= cap + 1e-9)]
+        if not cands:
+            continue
+        top = max(float(v) for v in vals)
+        b = 0.0
+        for a in cands:                                   # stop as soon as one candidate allows the largest constant
+            b = max(b, bound(a, False))
+            if b >= top:
+                break
+        if b < top:                                       # pairs of a turning ring: N = J_ortho + J_para
+            b = max([b] + [bound(a, True) for a in cands
+                           if a in flips() and (not cap or 2 <= cap + 1e-9)])
+        for v in vals:
+            j = float(v)
+            tol = max(RANGE_TOL, step_of(v, all_vals))
+            if j <= b + 1e-9:
+                continue
+            txt = f"#{n} {sg['shift']:.2f}: J = {v} Hz - {OUT_OF_RANGE} (upper bound {b:g} Hz; tolerance {tol:g} Hz)"
+            (cand if j <= b + tol + 1e-9 else inc).append(txt)
+    if inc:
+        return "inconsistent", "\n".join("item 4(b) range: " + x for x in inc + cand)
+    if cand:
+        return "candidate (check)", "\n".join("item 4(b) range: " + x for x in cand)
+    return "", ""
+
+
 def proton_classes(m, ranks, benz, dist):
     """k (number of large couplings) or None (flexible), the large-coupling partners, and whether the proton is
     meta to an aromatic F, for every H atom."""

@@ -149,3 +149,29 @@ def test_singlets_only_or_letters_without_j_are_not_variant_a():
     assert res["item3"] == "consistent" and res["_class"] == "no finding"
     res = check(BNOH, H + "7.38 – 7.26 (m, 5H), 4.68 (d, 2H), 1.85 (t, 1H).")
     assert res["item4a"] == "inconsistent" and not res["conclusion"].endswith(W["na_tail"])
+
+
+# ===== Range of the coupling constants =====
+
+from width_count import OUT_OF_RANGE  # noqa: E402
+
+
+def ranges(smiles, desc):
+    res = check(smiles, desc)
+    return res["item4b"], [x for x in res["findings4b"].split("\n") if OUT_OF_RANGE in x]
+
+
+def test_constant_above_the_bound_of_the_pairs():
+    # para-disubstituted ring: N = J_ortho + J_para <= 9.0 + 1.0 Hz
+    assert ranges(BRANISOLE, H + "7.37 (d, J = 9.8 Hz, 2H), 6.78 (d, J = 9.8 Hz, 2H), 3.77 (s, 3H).")[1] == []
+    v, f = ranges(BRANISOLE, H + "7.37 (d, J = 10.2 Hz, 2H), 6.78 (d, J = 10.2 Hz, 2H), 3.77 (s, 3H).")
+    assert v == "candidate (check)" and len(f) == 2 and "upper bound 10 Hz; tolerance 0.3 Hz" in f[0]
+    v, f = ranges(BRANISOLE, H + "7.37 (d, J = 12.0 Hz, 2H), 6.78 (d, J = 12.0 Hz, 2H), 3.77 (s, 3H).")
+    assert v == "inconsistent" and "#1 7.37: J = 12.0 Hz" in f[0]
+
+
+def test_no_range_check_near_f_or_with_unknown_partners():
+    # H-F couplings are not checked by range (ortho H-F of up to about 14 Hz is known)
+    assert ranges(FANISOLE, H + "6.97 (dd, J = 14.3, 9.1 Hz, 2H), 6.83 (dd, J = 9.1, 4.5 Hz, 2H), 3.77 (s, 3H).")[1] == []
+    # benzyl alcohol: the CH2 can stand at 4.68 ppm and has partners outside Table 4 (OH): the bound is 25 Hz
+    assert ranges(BNOH, H + "7.38 – 7.26 (m, 5H), 4.68 (d, J = 14.0 Hz, 2H), 1.85 (t, J = 14.0 Hz, 1H).")[1] == []
