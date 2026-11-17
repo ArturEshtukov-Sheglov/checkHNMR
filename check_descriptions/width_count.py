@@ -621,6 +621,22 @@ def describe(items, units, culprits, together, windows_used):
     return head + "; signal without a place: " + parts[0]
 
 
+SYMMETRY = "the integrals cannot be divided among the sets of equivalent protons of the structure"
+
+
+def symmetry_text(units, items):
+    """v2.1.5, item 1: the integrals do not fit the groups that must stand whole in one signal."""
+    ch3 = sum(u["size"] // 3 for u in units if u["g"] == 3)
+    pairs = sum(u["size"] // 2 for u in units if u["g"] == 2)
+    whole = ", ".join(x for x in (f"{ch3} CH3 (3H{' each' if ch3 > 1 else ''})" if ch3 else "",
+                                  f"{pairs} pair{'s' if pairs > 1 else ''} of ring protons (2H{' each' if pairs > 1 else ''})"
+                                  if pairs else "") if x)
+    ints = ", ".join(f"{it[3]:g}" for it in items)
+    return (f"item 1: {SYMMETRY} (whole in one signal: {whole or 'none'}; integrals of the signals: {ints}). "
+            "A CH3 group gives one signal, and so do the two ortho or the two meta protons of a ring that turns about "
+            "its axis; the structure may be another compound (an isomer), or the rotation of the ring is slow")
+
+
 SHIFT_LIMITS = (-5.0, 20.0)   # ppm: outside this a shift is a reading error (e.g. "3,47"); no shift windows then
 CULPRIT_TRIALS = 400          # feasibility runs at most when naming the signals that block the distribution
 
@@ -639,7 +655,8 @@ def gap(a, b):
 
 
 def check_counting(sigs, desc, mol, freq):
-    """(verdict, findings): 'inconsistent', 'candidate (check)' or '' (no finding / not counted)."""
+    """(verdict, findings): 'inconsistent', 'candidate (check)', 'symmetry' (a finding of item 1) or ''
+    (no finding / not counted)."""
     items = signal_items(sigs)
     if not items or not any(it[2] is not None for it in items):
         return "", ""
@@ -663,9 +680,12 @@ def check_counting(sigs, desc, mol, freq):
     loose = relax(items, set(range(len(items))))
     if feasible(units, loose, set(), windows) is not True:
         windows, used = [everywhere] * len(items), False
-        # not even the integrals fit the sets of equivalent protons: not a matter of item 4(b)
-        if feasible(units, loose, set(), windows) is not True:
+        # not even the integrals fit the sets of equivalent protons: not a matter of item 4(b) but of item 1
+        r = feasible(units, loose, set(), windows)
+        if r is None:
             return "", ""
+        if r is False:
+            return "symmetry", symmetry_text(units, items)
     first = feasible(units, items, set(), windows)
     if first is None or first:
         return "", ""

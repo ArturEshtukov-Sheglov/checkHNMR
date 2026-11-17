@@ -245,7 +245,9 @@ def check_row(r):
 
     if mol is not None and res["item1"] == "consistent" and not res["_mixture"] and checkable(mol):    # v2.1.5
         v, f = check_counting(res["_sigs"], r["description"], mol, res.get("freq"))
-        if v == "inconsistent":
+        if v == "symmetry":                                     # v2.1.5: item 1, sets of equivalent protons
+            res["item1"], res["findings1"] = "inconsistent (check)", "\n".join(x for x in (res["findings1"], f) if x)
+        elif v == "inconsistent":
             res["item4b"], res["findings4b"] = v, "\n".join(x for x in (f, res["findings4b"]) if x)
         elif v:
             if res["item4b"] in ("consistent", "nothing to check"):

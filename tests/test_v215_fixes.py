@@ -7,6 +7,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path[:0] = [os.path.join(HERE, "..", d) for d in ("check_descriptions", "review_to_word")]
 
 import check_descriptions as cd  # noqa: E402
+from width_count import SYMMETRY  # noqa: E402
 
 COUNT = "cannot be distributed over the protons of the structure"
 H = "1H NMR (400 MHz, CDCl3) δ "
@@ -84,9 +85,14 @@ def test_no_counting_finding_when_shifts_or_symmetry_are_the_problem():
     # "3,77" is read as 77 ppm: no shift windows, no finding of item 4(b)
     assert counting(BRANISOLE, H + "7.37 (d, J = 9.0 Hz, 2H), 6.78 (d, J = 9.0 Hz, 2H), 3,77 (s, 3H).")[1] == ""
     # a para-disubstituted ring as four 1H signals: the integrals do not fit the sets of equivalent protons;
-    # this is not a matter of the multiplicities
-    assert counting(BRANISOLE, H + "7.39 (d, J = 9.0 Hz, 1H), 7.35 (d, J = 9.0 Hz, 1H), 6.80 (d, J = 9.0 Hz, 1H), "
-                                   "6.76 (d, J = 9.0 Hz, 1H), 3.77 (s, 3H).")[1] == ""
+    # this is not a matter of the multiplicities but a finding of item 1
+    desc = H + "7.39 (d, J = 9.0 Hz, 1H), 7.35 (d, J = 9.0 Hz, 1H), 6.80 (d, J = 9.0 Hz, 1H), 6.76 (d, J = 9.0 Hz, 1H), " \
+               "3.77 (s, 3H)."
+    assert counting(BRANISOLE, desc)[1] == ""
+    res = check(BRANISOLE, desc)
+    assert res["item1"] == "inconsistent (check)" and SYMMETRY in res["findings1"] and "2 pairs of ring protons" in res["findings1"]
+    # the same with the pairs in 2H signals: no finding
+    assert check(BRANISOLE, H + "7.37 (d, J = 9.0 Hz, 2H), 6.78 (d, J = 9.0 Hz, 2H), 3.77 (s, 3H).")["item1"] == "consistent"
 
 
 def test_proton_stands_only_at_a_possible_shift():
