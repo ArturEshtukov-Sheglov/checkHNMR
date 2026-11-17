@@ -123,10 +123,10 @@ def output_name(name):
 
 # ===== Checking one description =====
 
-def text_result(r, arom_hx_possible=True, x_in_structure=None):
+def text_result(r, arom_hx_possible=True, x_in_structure=None, nuclei=None):
     """Text checks of row r, with the structure columns not yet filled."""
     res = check(r["description"], r.get("hetero", ""), arom_hx_possible=arom_hx_possible,
-                x_in_structure=x_in_structure)
+                x_in_structure=x_in_structure, nuclei=nuclei)
     res.update(id=r["id"], description=r["description"], smiles=r.get("smiles", ""),
                H_reported=None, H_structure=None, item1="no structure", item6a="no structure",
                findings1="", findings6a="", item4b="no structure", findings4b="")
@@ -203,7 +203,8 @@ def tiny_structure_guard(mol, r, res):
 
 def check_row(r):
     """All checks of one table row."""
-    res = text_result(r)
+    fels = set(re.findall(r"[A-Z][a-z]?", r.get("formula") or ""))
+    res = text_result(r, nuclei=fels or None)               # v2.1.5: the HRMS formula when there is no structure
     mol = Chem.MolFromSmiles(r["smiles"]) if (Chem and r.get("smiles")) else None
     mol, guard = name_structure_guard(mol, r)                                   # v2.1
     if not guard:
@@ -216,7 +217,8 @@ def check_row(r):
         formula_els = set(re.findall(r"[A-Z][a-z]?", r.get("formula") or ""))
         has_x = any(a.GetSymbol() in SPIN_X for a in mol.GetAtoms()) or bool(formula_els & SPIN_X)
         # no aromatic proton within four bonds of F/P: aromatic constants are not H-X
-        res = text_result(r, arom_hx_possible=aromatic_hx_possible(mol), x_in_structure=has_x)
+        res = text_result(r, arom_hx_possible=aromatic_hx_possible(mol), x_in_structure=has_x,
+                          nuclei={a.GetSymbol() for a in mol.GetAtoms()} | formula_els)              # v2.1.5
     if r.get("smiles") and Chem and mol is None:
         res["note"] = "; ".join(x for x in (res["note"], "SMILES not read") if x)
     if guard:

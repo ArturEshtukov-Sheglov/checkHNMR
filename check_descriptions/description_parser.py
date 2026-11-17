@@ -391,7 +391,8 @@ def parse_description(desc):
 def hetero_info(text):
     """19F / 31P descriptions after the 1H description.
     Returns (state, hetJ, labelled): state = {'F': ..., 'P': ...} with 'absent', 'decoupled',
-    'split' (some signal shows splitting) or 'singlets'; hetJ = coupling constants
+    'split' (some signal shows splitting), 'singlets' (all signals written as s) or 'no J' (v2.1.5: shifts
+    without multiplicity and without J); hetJ = coupling constants
     reported in proton-coupled 19F/31P descriptions; labelled = the same as (nucleus, value)."""
     text = text.replace("−", "-")
     state, hetJ, labelled = {}, [], []
@@ -406,7 +407,7 @@ def hetero_info(text):
             state[nuc] = "decoupled"
             continue
 
-        mults = []
+        mults, nJ = [], len(hetJ)
         for bl in coupled:
             for inner in re.findall(r"\(([^()]*)\)", bl.group(2)):
                 m = parse_mult(inner.split(",")[0])
@@ -416,7 +417,12 @@ def hetero_info(text):
                     vals = re.findall(NUM, jb.group("vals"))
                     hetJ += vals
                     labelled += [(nuc, v) for v in vals]
-        state[nuc] = "split" if any(x[0] != "s" for x in mults) else "singlets"
+        # v2.1.5: shifts without multiplicity and without J ("19F NMR d -110.2") are not singlets: the description
+        # does not say whether the signal is split (often 19F{1H} without saying so); the H-F partner is unverifiable
+        if any(x[0] != "s" for x in mults) or len(hetJ) > nJ:
+            state[nuc] = "split"
+        else:
+            state[nuc] = "singlets" if mults else "no J"
     return state, hetJ, labelled
 
 

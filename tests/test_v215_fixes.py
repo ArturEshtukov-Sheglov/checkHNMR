@@ -96,3 +96,26 @@ def test_proton_stands_only_at_a_possible_shift():
                     "7.18 (t, J = 7.6 Hz, 1H), 7.06 (t, J = 7.5 Hz, 1H), 6.85 (d, J = 7.8 Hz, 1H), "
                     "2.20 (d, J = 14.0 Hz, 1H), 1.92 (d, J = 14.0 Hz, 1H), 1.40 (s, 3H), 0.72 (s, 9H).")
     assert v == "inconsistent" and "#3 7.27" in f and "each proton only at shifts where it can stand" in f
+
+
+# ===== 19F (31P) description without multiplicity and J =====
+
+def item3(smiles, desc, hetero):
+    r = dict(id="t", description=desc, smiles=smiles, hetero=hetero, formula="", opsin_status="")
+    res = cd.check_row(r)
+    return res["item3"], res["findings3"]
+
+
+FDESC = H + "6.97 (dd, J = 9.1, 8.2 Hz, 2H), 6.83 (dd, J = 9.1, 4.5 Hz, 2H), 3.77 (s, 3H)."
+
+
+def test_19f_without_j_leaves_the_partner_unverifiable():
+    v, f = item3(FANISOLE, FDESC, "19F NMR (376 MHz, CDCl3) δ −124.3.")
+    assert v == "partner unverifiable? (check)" and "its description gives no multiplicity or J" in f
+    # explicit singlets in a proton-coupled 19F description: as before
+    v, f = item3(FANISOLE, FDESC, "19F NMR (376 MHz, CDCl3) δ −124.3 (s).")
+    assert v == "inconsistent (check)"
+    # a 19F description without J, but no F in the compound (counter-ion, misread text): as before
+    v, f = item3("COc1ccc(C)cc1", FDESC.replace("3.77 (s, 3H)", "3.77 (s, 3H), 2.30 (s, 3H)"),
+                 "19F NMR (376 MHz, CDCl3) δ −78.9.")
+    assert v == "inconsistent (check)" and "no multiplicity or J" not in f

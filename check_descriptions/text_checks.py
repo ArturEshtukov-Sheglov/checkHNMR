@@ -185,6 +185,10 @@ def check_3_partners(sigs, het, all_vals, partial=False):
             if unverifiable_het:
                 reason.append("may be a coupling to " + "/".join(NUCLEUS_NAME[n] for n in unverifiable_het)
                               + " (decoupled spectrum)")
+            no_j = [n for n, st in het.items() if st == "no J"]                       # v2.1.5
+            if no_j:
+                reason.append("may be a coupling to " + "/".join(NUCLEUS_NAME[n] for n in no_j)
+                              + " (its description gives no multiplicity or J)")
             cand3.append(f"#{i+1} {s['shift']:.2f}: J = {v} - no partner"
                          + ("; " + "; ".join(reason) if reason else
                             " (no m/br signal, no unverifiable heteronucleus): likely item-3 inconsistency"))
@@ -192,7 +196,7 @@ def check_3_partners(sigs, het, all_vals, partial=False):
         for v in s["Jhet"]:
             nuc = "P" if re.search(r"P", str(s["text"])) and not re.search(r"F", str(s["text"])) else "F"
             st = het.get(nuc, "absent")
-            if st in ("absent", "decoupled"):
+            if st in ("absent", "decoupled", "no J"):                                 # v2.1.5: no J
                 cand3.append(f"#{i+1} {s['shift']:.2f}: J(H,X) = {v} - partner unverifiable (heteronuclear description {st})")
             elif st == "singlets":
                 f3.append(f"#{i+1} {s['shift']:.2f}: J(H,X) = {v} but all {nuc} signals are singlets")
@@ -288,12 +292,15 @@ def check_3_reverse(sigs, hetJ_lab):
 
 # ===== All text checks of one description =====
 
-def check(desc, hetero_text="", arom_hx_possible=True, x_in_structure=None):
+def check(desc, hetero_text="", arom_hx_possible=True, x_in_structure=None, nuclei=None):
     """Items 3, 4(a) and 6(b) of one description; hetero_text = the 19F/31P descriptions after it;
-    arom_hx_possible = False if no aromatic proton of the structure is near F or P."""
+    arom_hx_possible = False if no aromatic proton of the structure is near F or P; nuclei = the elements of the
+    structure and of the HRMS formula (None: no structure)."""
     desc, hetero_text = normalize_text(desc), normalize_text(hetero_text or "")    # v2.1
     freq, sigs = parse_description(desc.replace("−", "-"))
     het, hetJ, hetJ_lab = hetero_info(hetero_text) if hetero_text else ({"F": "absent", "P": "absent"}, [], [])
+    if nuclei is not None:                     # v2.1.5: a 19F/31P description without J, but no F/P in the compound
+        het = {n: ("singlets" if st == "no J" and n not in nuclei else st) for n, st in het.items()}   # (counter-ion, misread)
     all_vals = [v for s in sigs for v in s["J"] + s["Japp"]]
 
     fx3, cand3, info3 = move_heteronuclear(sigs, het, hetJ, all_vals, arom_hx_possible, x_in_structure)
