@@ -111,7 +111,8 @@ reported as not checked by items 3, 4(a) and 6. It is a beta until its accuracy 
 on test articles that were not used in its development.
 
 The tools were first developed for a survey of ¹H NMR descriptions in Organic Letters (first half of 2026). The
-version used in that survey (frozen 17.10.2026, v1.1) and the registration files are in a separate repository,
+version that gives the results of that survey (the frozen version of 18 October 2026; version 1.1 is its code
+cleanup with identical output) and the registration files are in a separate repository,
 [nmr-1h-description-tools](https://github.com/ArturEshtukov-Sheglov/nmr-1h-description-tools).
 
 Inspired by checkCIF (IUCr). checkHNMR is not affiliated with or endorsed by the IUCr or the American Chemical Society.

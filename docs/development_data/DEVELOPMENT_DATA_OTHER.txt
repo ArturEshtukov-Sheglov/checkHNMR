@@ -1,0 +1,14 @@
+# Development data that are not in the PMCID lists of this folder (SI files named by the ACS manuscript number).
+# All of them are development data: the accuracy of a version is measured only on data that are not development data.
+# Dates and the version first developed on them; what was changed is in docs/DEVELOPMENT_LOG.md.
+ol3c04097   Org. Lett. 2023          2026-10-22  V2
+ol503595m   Org. Lett. 2014          2026-10-22  V2
+cs5b02916   ACS Catal. 2015          2026-10-22  V2
+ja5c20554   J. Am. Chem. Soc. 2026   2026-10-22  V2 (also structures of the structure stress test)
+ja6c04560   J. Am. Chem. Soc. 2026   2026-10-22  V2 (also structures of the structure stress test)
+ja6c10875   J. Am. Chem. Soc. 2026   2026-10-22  V2 (also structures of the structure stress test; V2.1.3-beta)
+ol5c05448   Org. Lett. 2026          2026-11-17  V2.1.5-beta (an article of the survey sample, used after its assessment in the survey; it stays in the survey)
+# Survey sample, Org. Lett. (first half of 2026): 201 SI files, 8,609 1H descriptions, of them 982 selected with reference structures
+#   982 selected descriptions: upper bound of item 4(b) tuned on them (V2, 2026-10-22)
+#   8,609 descriptions: regression checks (V2 to V2.1.3); reading-quality marker calibrated on them (V2.1, 2026-10-24);
+#   changed findings among the 982 judged against the survey reference (V2.1, 2026-10-25/26)

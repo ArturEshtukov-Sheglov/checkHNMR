@@ -6,4 +6,5 @@ those protons. Item 1 checks that the integrals fit the sets of equivalent proto
 without J leaves an H-X partner unverifiable. A description without any coupling constant and with an "m" is
 "NOT CHECKED by items 3, 4(a) and 6" instead of "NO INCONSISTENCY FOUND".
 A beta until its accuracy is measured on the test articles of the second data set (OSF Update 3).
-Not the version used in the paper (frozen 17.10c / v1.1, see CHANGELOG.md).
+Not the version that gives the results of the survey: those come from the frozen version of 18 October 2026
+(measuring scripts of 17 October); version 1.1 is its code cleanup with identical output (see CHANGELOG.md).

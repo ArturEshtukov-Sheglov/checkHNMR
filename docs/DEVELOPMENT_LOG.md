@@ -44,12 +44,21 @@ The details of each change are in CHANGELOG.md.
 | 2026-10-25 | Molecules 2024-2025, articles selected with --term "CDCl3 OR DMSO-d6" (about 500) | lists of ranges with one bracket ("2.64–2.77, 2.90–3.04 (2m, 2H, COCH2)"); Hoye's "nfod, Japp = 8.3 Hz" not read; "br-s", "br-d", "br-m"; "((brs"; "complex", "comp", "c.s." (complex signal), "oct" (octet), "exch br s"; "13C {H} (100 MHz" without NMR; MS, UV-vis and IR data after the 1H data ("ESI-MS: [m/z] = 580.2021 (M2+)") read as signals | notation; no 13C line between 1H and other data | ranges allowed in shift lists; "nfod" read as m with J_app; "br-" read as br; "complex"/"comp"/"c.s."/"oct" read as m; "exch" ignored; doubled bracket; "13C {H} (" ends the 1H data; "ESI-MS", "m/z =", "UV-vis", "FT-IR", "IR (KBr" end the 1H data | V2.1-dev | test_v21_fixes.py |
 | 2026-10-26 | realistic stress test: 100,000 descriptions written from the forms and frequencies of 15,723 development descriptions | an assignment starting with a digit right after the constants ("J = 8.3 Hz, 1′-CH2", "J = 8.4 Hz, 2CH2", "J = 11.2, 6.3 Hz, 7,8-H") read as an extra constant | assignments with locants | a value is not a constant when a prime, a hyphen with a letter, a capital letter or a locant list follows it | V2.1-dev | test_v21_fixes.py; tests/stress/realistic_test.py |
 
-## Journals of the study: never development data
+## Journals of the study
 
 Org. Lett., Angew. Chem. Int. Ed., Eur. J. Org. Chem., Tetrahedron Lett., Chem. Commun., Nature Communications and
-Communications Chemistry (any year; the last three added 2026-10-25, in the main list of the survey) are the journals of the survey. Their SI are not used to develop the tools, so that the measured accuracy is not tuned to their styles.
-`fetch_oa_si.py` refuses to download them. Exception recorded earlier: the 201 Org. Lett. SI of the survey sample
-were used for regression checks of V2/V2.1 (see the rows above); they belong to the study, not to a test set.
+Communications Chemistry (any year; the last three added 2026-10-25, in the main list of the survey) are the journals of the survey.
+`fetch_oa_si.py` refuses to download them, so that the development set is not drawn from them. Some of their data
+are nevertheless development data (rows above; list in `docs/development_data/DEVELOPMENT_DATA_OTHER.txt`):
+- the SI of ol3c04097 and ol503595m (Org. Lett. 2023 and 2014; V2) and of ol5c05448 (Org. Lett. 2026, an article
+  of the survey sample, used after its assessment in the survey; V2.1.5);
+- the 982 selected descriptions of the survey sample, on which the upper bound of item 4(b) was tuned (V2);
+- the 201 Org. Lett. SI of the survey sample (8,609 descriptions): regression checks (V2 to V2.1.3), calibration of
+  the reading-quality marker (V2.1), and changed findings among the 982 selected descriptions judged against the
+  survey reference (V2.1, 2026-10-25/26).
+
+The accuracy of a version is measured only on data that are not development data. Until 2026-11-17 this section
+was headed "never development data", which the rows above contradict (corrected in the OSF update of 17 November 2026).
 
 ## How an entry is made
 
