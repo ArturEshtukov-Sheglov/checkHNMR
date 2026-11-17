@@ -14,7 +14,12 @@ W = dict(cons="consistent", inc="inconsistent", chk="check", border="borderline"
               "in the SI or the raw data (FID) is advisable"),
          also=". Also to check by hand: ", also_pn=False,
          head_chk="TO CHECK BY HAND: ", tail_chk=" (no inconsistency found so far)",
-         nof="NO INCONSISTENCY FOUND by the automatic checks (items 2, 5 and 7 are not checked; 4(b) only in part)")
+         nof="NO INCONSISTENCY FOUND by the automatic checks (items 2, 5 and 7 are not checked; 4(b) only in part)",
+         # v2.1.5: a description without any coupling constant and with at least one "m" (variant A)
+         na_noj="not applicable: no coupling constants are reported",
+         nck=("NOT CHECKED by items 3, 4(a) and 6: no coupling constants are reported "
+              "(items 2, 5 and 7 are not checked; 4(b) only in part)"),
+         na_tail=". Items 3, 4(a) and 6: not applicable (no coupling constants reported)")
 
 SUBSTANTIVE = (("1", "item1"), ("3", "item3"), ("4(a)", "item4a"), ("4(b)", "item4b"))   # items 1-4 checked by the script (v2.1.5: 4(b))
 TO_CHECK = (("1", "item1"), ("3", "item3"), ("4(b)", "item4b"), ("6(a)", "item6a"))         # v2: 4(b)         # items that can be left to a person
@@ -32,11 +37,17 @@ def is_check(v):
     return any(x in v for x in ("unverifiable", "candidate", "?", "mixture")) or v == "check"
 
 
+def no_constants(res):
+    """v2.1.5: items 3, 4(a) and 6 are not applicable (no coupling constant is reported)."""
+    return (res.get("item3") or "").startswith(W["na"])
+
+
 def conclusion(res):
     """Conclusion for one description. Returns (text, class)."""
     subst = [n for n, k in SUBSTANTIVE if is_inc(res.get(k))]
     nota = ["6"] if is_inc(res.get("item6")) else []
     check = [n for n, k in TO_CHECK if is_check(res.get(k))]
+    tail = W["na_tail"] if no_constants(res) else ""
 
     if subst or nota:
         parts = []
@@ -54,11 +65,13 @@ def conclusion(res):
         if check:
             text += ". Also to check by hand: " + ", ".join(check)
         res["_n_subst"] = len(subst)
-        return text, ("inconsistent 1-4" if subst else "inconsistent 6 only")
+        return text + tail, ("inconsistent 1-4" if subst else "inconsistent 6 only")
 
     if check:
         return (("TO CHECK BY HAND: items " if len(check) > 1 else "TO CHECK BY HAND: item ") + ", ".join(check)
-                + " (no inconsistency found so far)", "to check")
+                + " (no inconsistency found so far)" + tail, "to check")
+    if tail:
+        return W["nck"], "not checked"
     return (W["nof"],
             "no finding")
 
@@ -69,6 +82,7 @@ def conclusion_text(res):
     nota = is_inc(res.get("item6"))
     check = [n for n, k in TO_CHECK if is_check(res.get(k))]
     pn = lambda xs: (W["items"] if len(xs) > 1 else W["item"]) + ", ".join(xs)
+    tail = W["na_tail"] if no_constants(res) else ""
 
     if subst or nota:
         text = W["head_inc"] + (pn(subst) + W["subst"] if subst else "") + ("; " if subst and nota else "") \
@@ -76,10 +90,10 @@ def conclusion_text(res):
         text += W["several"] if len(subst) >= 2 else W["one"] if subst else ""
         if check:
             text += W["also"] + (pn(check) if W["also_pn"] else ", ".join(check))
-        return text
+        return text + tail
     if check:
-        return W["head_chk"] + pn(check) + W["tail_chk"]
-    return W["nof"]
+        return W["head_chk"] + pn(check) + W["tail_chk"] + tail
+    return W["nck"] if tail else W["nof"]
 
 
 def combine_item6(a, b):
@@ -90,7 +104,7 @@ def combine_item6(a, b):
         return "check" if "check" in a else "borderline (subcategory)"
     if b == "cannot be determined" and a in ("consistent", "no structure"):
         return "cannot be determined" if a == "consistent" else "6(b) only: cannot be determined"
-    if a.startswith("subcategory"):                                         # v2.1.4: flexible chain
+    if a.startswith("subcategory") or a.startswith(W["na"]):              # v2.1.4: flexible chain; v2.1.5: no J
         return a
     if a == "no structure":
         return "6(b) only: " + ("consistent" if b != "cannot be determined" else b)

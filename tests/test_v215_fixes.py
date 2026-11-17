@@ -119,3 +119,27 @@ def test_19f_without_j_leaves_the_partner_unverifiable():
     v, f = item3("COc1ccc(C)cc1", FDESC.replace("3.77 (s, 3H)", "3.77 (s, 3H), 2.30 (s, 3H)"),
                  "19F NMR (376 MHz, CDCl3) δ −78.9.")
     assert v == "inconsistent (check)" and "no multiplicity or J" not in f
+
+
+# ===== Variant A: no coupling constant at all and at least one "m" =====
+
+from verdicts import W, conclusion_text  # noqa: E402
+
+
+def test_description_without_constants_is_reported_as_not_checked():
+    res = check(BNOH, H + "7.38 – 7.26 (m, 5H), 4.68 (s, 2H), 1.85 (br s, 1H).")
+    for k in ("item3", "item4a", "item6a", "item6"):
+        assert res[k] == "not applicable: no coupling constants are reported", k
+    assert res["_class"] == "not checked" and res["conclusion"] == W["nck"] == conclusion_text(res)
+    assert res["conclusion"].startswith("NOT CHECKED by items 3, 4(a) and 6")
+    # another finding: the usual conclusion, with the tail
+    res = check(BNOH, H + "7.38 – 7.26 (m, 6H), 4.68 (s, 2H), 1.85 (br s, 1H).")
+    assert res["_class"] == "inconsistent 1-4" and res["conclusion"].endswith(W["na_tail"])
+    assert res["conclusion"] == conclusion_text(res)
+
+
+def test_singlets_only_or_letters_without_j_are_not_variant_a():
+    res = check("Cc1ccc(C)cc1", H + "7.05 (s, 4H), 2.30 (s, 6H).")
+    assert res["item3"] == "consistent" and res["_class"] == "no finding"
+    res = check(BNOH, H + "7.38 – 7.26 (m, 5H), 4.68 (d, 2H), 1.85 (t, 1H).")
+    assert res["item4a"] == "inconsistent" and not res["conclusion"].endswith(W["na_tail"])

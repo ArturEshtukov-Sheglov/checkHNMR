@@ -38,7 +38,7 @@ from width_count import check_counting                              # v2.1.5
 from read_quality import reading_quality  # noqa: E402
 from structure_checks import (Chem, RDKIT_PROBLEM, check_item1, check_item1_formula, check_item6a,  # noqa: E402
                               aromatic_hx_possible, h_counts)
-from verdicts import conclusion, combine_item6  # noqa: E402
+from verdicts import W, conclusion, combine_item6  # noqa: E402
 from excel_output import write_table  # noqa: E402
 
 
@@ -252,6 +252,17 @@ def check_row(r):
                 res["item4b"] = v
             res["findings4b"] = "\n".join(x for x in (res["findings4b"], f) if x)
 
+    # v2.1.5 (variant A): no coupling constant at all and at least one "m" (the other signals s or without
+    # multiplicity): items 3, 4(a) and 6 have nothing to check, and the conclusion says so
+    sg = res["_sigs"]
+    if sg and any(s["mult"] == "m" for s in sg) and all(s["mult"] in (None, "s", "m") for s in sg) \
+            and not any(s["J"] or s["Japp"] or s["Jhet"] or s.get("Jhet_found") for s in sg):
+        for k in ("item3", "item4a"):
+            if res[k] == "consistent":
+                res[k] = W["na_noj"]
+        if res["item6a"] in ("consistent", "no structure"):
+            res["item6a"] = W["na_noj"]
+
     q = reading_quality(r["description"], res["_sigs"])                        # v2.1
     res["reading"], res["reading_notes"] = q["level"], "; ".join(q["notes"])
     res["item6"] = combine_item6(res["item6a"], res["item6b"])
@@ -270,7 +281,8 @@ def print_stats(stats, rows_out):
     cl, tot = stats.get("_class", {}), len(rows_out)
     pc = lambda n: f"{n} ({100 * n / tot:.0f} %)" if tot else str(n)
     print(f"  conclusions: inconsistent 1-4 {pc(cl.get('inconsistent 1-4', 0))} | 6 only {pc(cl.get('inconsistent 6 only', 0))}"
-          f" | to check {pc(cl.get('to check', 0))} | no finding {pc(cl.get('no finding', 0))}  (screening - human verification required)")
+          f" | to check {pc(cl.get('to check', 0))} | no finding {pc(cl.get('no finding', 0))}"
+          f" | not checked (no J) {pc(cl.get('not checked', 0))}  (screening - human verification required)")
 
 
 def run(rows, out):

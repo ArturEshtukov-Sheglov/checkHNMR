@@ -38,10 +38,12 @@ CHOICES = dict(
     item1=["consistent", "inconsistent", "inconsistent (check)", "inconsistent? (check)", "mixture (check)",
            "subcategory: exchangeable proton not reported", "subcategory: protons on quadrupolar nuclei not reported",
            "cannot be determined", "no structure"],
-    item3=["consistent", "inconsistent", "inconsistent (check)", "partner unverifiable? (check)"],
-    item4a=["consistent", "inconsistent"],
+    item3=["consistent", "inconsistent", "inconsistent (check)", "partner unverifiable? (check)",
+           "not applicable: no coupling constants are reported"],
+    item4a=["consistent", "inconsistent", "not applicable: no coupling constants are reported"],
     item4b=["consistent", "candidate (check)", "inconsistent", "no structure"],
-    item6a=["consistent", "inconsistent", "candidate (check)", "subcategory: flexible chain", "no structure"],
+    item6a=["consistent", "inconsistent", "candidate (check)", "subcategory: flexible chain", "no structure",
+            "not applicable: no coupling constants are reported"],
     item6b=["consistent", "inconsistent", "borderline (subcategory)", "cannot be determined",
             "no pair (nothing to check)", "not applicable (6(a))"])
 # v2.1.3: items of the checklist that the script does not check, shown so that the table lists items 1-7
@@ -105,8 +107,10 @@ def x_conclusion(col, r):
            f'&IF(({ns}>0)*({n6}),"; ","")&IF({n6},"{W["notation"]}","")'
            f'&IF({ns}>=2,"{W["several"]}",IF({ns}=1,"{W["one"]}",""))'
            f'&IF({nk}>0,"{W["also"]}"&{also},"")')
+    na = f'(LEFT({c["item3"]},{len(W["na"])})="{W["na"]}")'                                  # v2.1.5: no J
+    tail = f'IF({na},"{W["na_tail"]}","")'
     chk = f'"{W["head_chk"]}"&{pn(nk, chkl)}&"{W["tail_chk"]}"'
-    return f'=IF({ns}+{n6}>0,{inc},IF({nk}>0,{chk},"{W["nof"]}"))'
+    return f'=IF({ns}+{n6}>0,{inc}&{tail},IF({nk}>0,{chk}&{tail},IF({na},"{W["nck"]}","{W["nof"]}")))'
 
 
 def x_item6(col, r):
@@ -117,7 +121,7 @@ def x_item6(col, r):
             f'IF(ISNUMBER(SEARCH("{W["chk"]}",{a})),"{W["chk"]}",'
             f'IF(ISNUMBER(SEARCH("{W["border"]}",{b})),"{W["border_full"]}",'
             f'IF(AND({b}="{W["cbd"]}",{a}="{W["cons"]}"),"{W["cbd"]}",'
-            f'IF(LEFT({a},{len(W["subcat"])})="{W["subcat"]}",{a},'
+            f'IF(OR(LEFT({a},{len(W["subcat"])})="{W["subcat"]}",LEFT({a},{len(W["na"])})="{W["na"]}"),{a},'
             f'IF({a}="{W["nostruct"]}",IF({b}="{W["cbd"]}","{only}{W["cbd"]}","{only}{W["cons"]}"),'
             f'"{W["cons"]}"))))))')
 
@@ -207,6 +211,7 @@ def add_colours_and_lists(ws, col, last):
     area, c = f"{L}2:{L}{last}", f"{L}2"
     for formula, colr in [(f'LEFT({c},{len(W["head_inc"])})="{W["head_inc"]}"', RED),
                           (f'LEFT({c},{len(W["head_chk"])})="{W["head_chk"]}"', YELLOW),
+                          (f'LEFT({c},{len(W["nck"].split(":")[0])})="{W["nck"].split(":")[0]}"', GREY),   # v2.1.5
                           (f'LEN({c})>0', GREEN)]:
         ws.conditional_formatting.add(area, FormulaRule(formula=[formula], fill=fill(colr), stopIfTrue=True))
 
@@ -306,7 +311,9 @@ def write_summary(sm, col, last, rows_out, sheet1):
             ("inconsistent under item 6 only (notation)",
              f'=COUNTIF({C},"{INC}:*")-COUNTIF({C},"{INC}*{SUB}*")', RED),
             ("to check by hand (no inconsistency found so far)", f'=COUNTIF({C},"{CHK}*")', YELLOW),
-            ("no inconsistency found by the automatic checks", f'=COUNTIF({C},"{NOF}*")', GREEN)]:
+            ("no inconsistency found by the automatic checks", f'=COUNTIF({C},"{NOF}*")', GREEN),
+            ("not checked by items 3, 4(a) and 6: no coupling constants reported",                  # v2.1.5
+             f'=COUNTIF({C},"{W["nck"].split(":")[0]}*")', GREY)]:
         r = sm.max_row + 1
         sm.append([label, formula, f"=IF(COUNTA({C})=0,\"\",B{r}/COUNTA({C}))"])
         sm.cell(row=r, column=1).fill = fill(colr)
