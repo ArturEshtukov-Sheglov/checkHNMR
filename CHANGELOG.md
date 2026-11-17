@@ -62,7 +62,10 @@ Changes that **do not change results**:
   verdicts, findings, alerts and verification codes are the same as with RDKit in Python. New alerts on the website:
   A for the counting of item 4(b), for the range of J and for item 1 (sets of equivalent protons); B for the width
   test near another signal and for a constant at the range bound; C "No coupling constants reported". Italic *J*
-  and *ortho*/*meta*/*para* in the alerts; American spelling in the texts.
+  and *ortho*/*meta*/*para* in the alerts; American spelling in the texts. V2.1.4-beta is kept unchanged on the
+  website at `/v2.1.4-beta/`: the Python, the scripts and the libraries are byte-identical; its pages got only the
+  archive banner and style, the archived address (canonical, `noindex`) and links to `/v2.1.3-beta/` that work from
+  the subfolder. It reproduces the 77 verification codes of the reports made with V2.1.4-beta on the SI of ol5c05448.
 - Structure stress test: a second pass with constants drawn within the Table-4 ranges and the full check, with four
   new errors (one more large J on an aromatic H; an aromatic doublet as a singlet; an aromatic *ortho* J of 11–14 Hz;
   a 2H ring signal split into two 1H signals) and self-test rows for them. Unit tests: tests/test_v215_fixes.py
