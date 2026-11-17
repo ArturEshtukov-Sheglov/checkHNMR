@@ -225,6 +225,19 @@ def selftest(n):
     m = re.search(r"mult_more .*?item 4\(b\) flagged \d+ \(([\d.]+) %\)", txt3)
     if m:
         rows.append(("item 4(b): too many partners found", m.group(1) + " %", "info", "upper bound only"))
+    # v2.1.5: counting of large couplings, width test, range of J, sets of equivalent protons (second pass)
+    m = re.search(r"v215 clean15 .*?any new-rule finding (\d+) \(([\d.]+) %\)", txt3)
+    row("v2.1.5 rules: false findings on correct descriptions", m.group(1) if m else "?",
+        bool(m) and int(m.group(1)) == 0, "0")
+    m = re.search(r"v215 arom_more .*?any new-rule finding \d+ \(([\d.]+) %\)", txt3)
+    row("item 4(b): one more large J on an aromatic H found", (m.group(1) + " %") if m else "?",
+        bool(m) and float(m.group(1)) >= 80, ">= 80 % (missed when an NH/OH or a flexible proton can take the place)")
+    for kind, label in (("arom_less", "item 4(b): aromatic doublet written as a singlet found"),
+                        ("j_range", "item 4(b): aromatic ortho J of 11-14 Hz found"),
+                        ("symmetry", "items 1, 4(b): 2H ring signal split into two 1H found")):
+        m = re.search(r"v215 " + kind + r" .*?any new-rule finding \d+ \(([\d.]+) %\)", txt3)
+        if m:
+            rows.append((label, m.group(1) + " %", "info", "no assignment; NH/OH, partners outside Table 4: no bound"))
 
     print(f"Self-test: realistic reading test, {n} descriptions in styles of published ones ...")   # v2.1
     code, txt4 = run_capture([sys.executable, os.path.join(STRESS, "realistic_test.py"), str(n), SEED], out_dir)

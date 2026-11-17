@@ -46,7 +46,7 @@ from text_checks import step_of
 from item4b import candidates, h_atoms
 
 LARGE = 6.0                # Hz: a "large" coupling
-GUARD_C = 3.0              # the guard: a neighbouring signal closer than c * J_max lifts the width condition
+GUARD_C = 3.0              # the guard: a neighboring signal closer than c * J_max lifts the width condition
 TAU_EXTRA = 0.2            # Hz: added to the rounding tolerance of the reported width
 FIVE_BOND_SMALL = 1.0      # Hz: |5J| of a partner outside Table 4 on a non-zigzag, non-homoallylic path
 SEARCH_BUDGET = 300000     # steps of the distribution search; beyond this no finding is given
@@ -84,7 +84,7 @@ def bond_in_ring(m, a, b):
 
 def sym_classes(m, marks=None):
     """Topological symmetry classes of the atoms (iterative refinement of atom invariants by the sorted
-    (bond type, neighbour class) lists); marks: {atom: label} added to the invariant.  The same code runs on the
+    (bond type, neighbor class) lists); marks: {atom: label} added to the invariant.  The same code runs on the
     desktop and on the website, so the classes do not depend on the RDKit build."""
     marks = marks or {}
     inv = [(a.GetSymbol(), a.GetFormalCharge(), a.GetIsotope(), len(a.GetNeighbors()), a.GetIsAromatic(), a.IsInRing(),
@@ -284,6 +284,8 @@ def width_bound(m, dist, benz, ranks, x, decoupled):
 MAX_HH = 25.0             # Hz: no H-H coupling is larger (the rule of v2; used when a partner is not in Table 4)
 RANGE_TOL = 0.3           # Hz: tolerance of the upper bound, or the reporting step if larger
 OUT_OF_RANGE = "larger than any coupling of the protons that can stand at this shift"
+RANGE_A, RANGE_B = "item 4(b) range: ", "item 4(b) range, at the limit: "     # prefixes of the findings (A, B)
+COUNT_A, WIDTH_B = "item 4(b): ", "item 4(b) width: "
 
 
 def range_max(m, dist, benz, x, decoupled, flip):
@@ -379,11 +381,8 @@ def check_ranges(sigs, desc, mol):
                 continue
             txt = f"#{n} {sg['shift']:.2f}: J = {v} Hz - {OUT_OF_RANGE} (upper bound {b:g} Hz; tolerance {tol:g} Hz)"
             (cand if j <= b + tol + 1e-9 else inc).append(txt)
-    if inc:
-        return "inconsistent", "\n".join("item 4(b) range: " + x for x in inc + cand)
-    if cand:
-        return "candidate (check)", "\n".join("item 4(b) range: " + x for x in cand)
-    return "", ""
+    lines = [RANGE_A + x for x in inc] + [RANGE_B + x for x in cand]
+    return ("inconsistent" if inc else "candidate (check)" if cand else ""), "\n".join(lines)
 
 
 def proton_classes(m, ranks, benz, dist):
@@ -833,7 +832,7 @@ def check_counting(sigs, desc, mol, freq):
     if second:
         named = sorted(unguarded & culprits) or sorted(unguarded)
         jm = max(guards[b] for b in named)
-        return "candidate (check)", ("item 4(b) width: " + text + "; a neighbouring signal is within "
+        return "candidate (check)", (WIDTH_B + text + "; a neighboring signal is within "
                                      f"{GUARD_C:g} x J_max ({jm:g} Hz)" + ("" if freq else " or the frequency is not stated")
                                      + ", so strong coupling cannot be excluded")
-    return "inconsistent", "item 4(b): " + text
+    return "inconsistent", COUNT_A + text

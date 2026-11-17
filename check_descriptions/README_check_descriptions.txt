@@ -1,7 +1,7 @@
 README - check_descriptions.py
 ==============================
 
-checkHNMR, local version V2.1.4-beta (see VERSION and CHANGELOG.md in the main folder for the
+checkHNMR, local version V2.1.5-beta (see VERSION and CHANGELOG.md in the main folder for the
 changes since version 1.1, which this description was first written for)
 
 Author: Artur V. Eshtukov-Shcheglov
@@ -203,6 +203,57 @@ deceptively simple; not an inconsistency), when the structure has no
 saturated-ring CH2-CH2. On 5,120 development descriptions with structures:
 3 new item-4(b) findings (all real errors), 260 subcategories, no other change.
 
+Version 2.1.5: item 4(b) checks the multiplicities against the structure, and
+item 1 the integrals against its sets of equivalent protons.
+Reading of a multiplicity (strict): every letter counts ("dd" is two
+couplings, "t" two equal ones), the constants in decreasing order go with the
+letters in the written order, and a constant of 6 Hz or more is "large".
+Each proton of the structure has k large couplings to protons (pairs of Table 4
+of the width note, docs/development/width_criterion; ortho H-F counts, meta H-F
+may add one: k or k+1). The signals must be distributed over the protons so
+that every proton stands at a shift where it can stand (the shift windows of
+the upper bound of item 4(b)), the integrals fill every signal, and every
+signal shows the large couplings of its protons:
+  - more large couplings than the protons have: not allowed;
+  - fewer: allowed only if the signal is wide enough for them (the width test:
+    W_s + tau >= L_X, L_X = the sum of the lower bounds of the large couplings
+    of X minus the negative small ones, plus ortho/meta H-F; W_s = the sum of
+    the reported constants with their letters; tau = half the reporting steps
+    + 0.2 Hz), or if a large-coupling partner stands in the same signal;
+  - a proton with a partner outside Table 4 within 4 bonds, or on a
+    homoallylic or planar zigzag 5-bond path, is not tested for "fewer"; a
+    5-bond partner outside Table 4 otherwise subtracts 1 Hz from L_X; NH, OH,
+    protons near P or an aliphatic F can stand in any signal.
+If no distribution exists, item 4(b) is "inconsistent"; if it exists only when
+the width test is lifted for a signal with another signal within 3 x J_max Hz
+(strong coupling possible) or without a stated frequency, "candidate (check)".
+Range of J: every constant must fit at least one coupling of the protons that
+can stand at the shift of its signal (upper bounds of Table 4: ortho 9.0 Hz,
+10.0 Hz for N = J_ortho + J_para of a ring that turns about its axis, meta 3,
+para 1, cis/trans up to 19, diene 12, HC(=O)-CH= 10, ...; 25 Hz when a partner
+is outside Table 4 or the proton is on N, O or S; no bound near F or P).
+Above the bound by up to max(0.3 Hz, reporting step): "candidate (check)";
+more: "inconsistent". Note: Pretsch gives 6.5-8.5 Hz for ortho; the bound here
+is wider because correct descriptions in the development data reach 9.0 Hz
+(1H signals) and 10.0 Hz (2H doublets of para rings, N = J_ortho + J_para).
+Item 1: if the integrals cannot be divided among the groups that must stand
+whole in one signal (a CH3; the two ortho or the two meta protons of a ring
+that turns about its axis), even with multiplicities and shifts ignored, item 1
+is "inconsistent (check)" (e.g. a para-disubstituted ring as four 1H signals:
+another compound, or slow rotation of the ring).
+19F/31P: a description that gives only shifts ("19F NMR d -110.2") no longer
+counts as "all singlets"; an H-X partner is then unverifiable (item 3
+"partner unverifiable? (check)"), unless the compound has no F/P.
+No coupling constants: when a description reports no coupling constant at
+all and at least one "m", items 3, 4(a) and 6 are "not applicable: no coupling
+constants are reported" and the conclusion is "NOT CHECKED by items 3, 4(a)
+and 6 ..." instead of "NO INCONSISTENCY FOUND". On the development data
+(8,540 rows, 300 J. Org. Chem. 2024-2025 articles; 5,136 with a SMILES):
+item 4(b) becomes inconsistent in 75 descriptions (31 of them were candidate
+before) and candidate in 20; item 1 inconsistent in 7; 629 descriptions are
+"not checked"; 35 item-3 verdicts go from inconsistent to partner
+unverifiable (details in CHANGELOG.md).
+
 Not checked: items 2 (chemical shifts), 5 (couplings and resolution) and 7 (apparent multiplicity).
 The subcategory "flexible chain" under 6(a) is found only when the structure has
 no saturated-ring CH2-CH2 (otherwise the ring check lists the CH2 signals for a
@@ -368,6 +419,12 @@ Strange findings in one description
   longer chains (perturbed by virtual coupling) is not recognised.
 - Item 4(b), proton next to a CH3 doublet (2.1.4): a CH that may hide in a
   multiplet without constants, or a broad or apparent signal, is not checked.
+- Item 4(b), counting and width (2.1.5): no assignment is made; a proton that
+  can stand in a signal "absorbs" it. Signals written as m, br, app or with a
+  J_app, and descriptions with fractional integrals (rotamers, mixtures), are
+  not counted. Protons with partners outside Table 4 are not tested for
+  "fewer large couplings", and their range bound is 25 Hz; near F or P there
+  is no range bound (H-F and H-P constants are not checked by range).
 - A constant may be matched by chance to an unrelated signal with the same
   value; such a coupling is then taken as having a partner.
 - Coupling constants given only as subscript labels without values

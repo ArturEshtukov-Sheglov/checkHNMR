@@ -367,7 +367,7 @@ def write_summary(sm, col, last, rows_out, sheet1):
                "Every finding must be checked by hand."])
     sm.append(["All numbers on this sheet are Excel formulas over the sheet 'checked' (click a cell to see it). "
                "To correct a verdict there, choose it from the drop-down list in the cell: item 6, the conclusion, "
-               "the colours and this summary are formulas and follow at once."])
+               "the colors and this summary are formulas and follow at once."])
     sm.cell(row=sm.max_row, column=1).font = Font(italic=True)
     sm.column_dimensions["A"].width = SUMMARY_LABEL_WIDTH
     for k in range(2, nc + 4):

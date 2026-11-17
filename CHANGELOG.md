@@ -3,6 +3,80 @@
 All notable changes to the tools. Newest first. For every version: what changed and whether it
 changes the results. Dates are those of the code; the version used in the paper is marked.
 
+## 2026-11-17 — V2.1.5-beta (item 4(b): counting of large couplings, width test, range of J; item 1: sets of equivalent protons)
+
+Changes that **change results** (each rule was a separate commit; regression after each on the development table of
+300 J. Org. Chem. 2024-2025 articles, 8,540 rows, 5,136 with a SMILES; numbers are verdicts changed against the
+previous step):
+- `width_count.py` (new), item 4(b) — counting of large couplings and the width test. A multiplicity is read
+  strictly: every letter counts ("dd" two couplings, "t" two equal ones), the constants in decreasing order go with
+  the letters, and a constant of 6 Hz or more is large. Every proton of the structure has k large couplings to protons
+  (the pairs of Table 4 of the width note; *ortho* H–F counts, *meta* H–F may add one: k or k + 1). The signals must
+  be distributed over the protons so that every proton stands at a shift where it can stand (the shift windows of
+  the upper bound of item 4(b)), the integrals fill every signal, and no signal shows more large couplings than its
+  protons have. A signal may show fewer only if it is wide enough for them (W_s + τ ≥ L_X; the multiplet-width test,
+  justified in `docs/development/width_criterion/`) or if a large-coupling partner stands in the same signal. A
+  proton with a partner outside Table 4 within 4 bonds, or on a homoallylic or planar zigzag 5-bond path, is not
+  tested for "fewer" (variant b″); another 5-bond partner outside Table 4 subtracts 1 Hz from L_X. No distribution:
+  "inconsistent"; a distribution only when the width test is lifted for a signal with another signal within
+  3 × J_max Hz, or without a stated frequency: "candidate (check)". The windows are dropped when the integrals cannot
+  meet them even with every multiplicity ignored. Item 4(b) "inconsistent" now enters the conclusion as a substantive
+  item (`verdicts.py`, the Excel formula). Regression: 4(b) consistent → inconsistent 36, candidate → inconsistent 31,
+  consistent → candidate 16, nothing to check → candidate 1 (conclusions: to check → inconsistent 1-4 35; 6 only →
+  1-4 17; no finding → 1-4 1, → to check 2).
+- `description_parser.py`, `text_checks.py`, `check_descriptions.py` — a ¹⁹F or ³¹P description that gives only
+  shifts ("19F NMR δ −110.2") is no longer read as all singlets: the H–X partner of a constant without a ¹H partner
+  is unverifiable (item 3 "partner unverifiable? (check)"). Explicit singlets are read as before; so is such a
+  description when the compound (structure or HRMS formula) has no F/P. Regression: item 3 inconsistent (check) →
+  partner unverifiable? (check) 35 (conclusions 1-4 → to check 23, 1-4 → 6 only 3).
+- `check_descriptions.py`, `verdicts.py`, `excel_output.py` — a description without any coupling constant and with
+  at least one "m" (the other signals s or without multiplicity): items 3, 4(a) and 6 are "not applicable: no coupling
+  constants are reported", and the conclusion is "NOT CHECKED by items 3, 4(a) and 6: no coupling constants are
+  reported …" (grey) instead of "NO INCONSISTENCY FOUND"; with other findings, the usual conclusion gets the tail
+  "Items 3, 4(a) and 6: not applicable (no coupling constants reported)". A new row on the sheet "summary".
+  Regression: no finding → not checked 630 (items 3 / 4(a) / 6 not applicable in 728 / 730 / 730).
+- `width_count.py`, `check_descriptions.py`, item 1 — the integrals must fit the groups of equivalent protons that
+  stand whole in one signal (a CH3; the two *ortho* or the two *meta* protons of a ring that turns about its axis),
+  checked with every multiplicity and shift ignored, when the sum of the integrals agrees. Otherwise item 1 is
+  "inconsistent (check)" (for example, a *para*-disubstituted ring written as four 1H signals: another compound, or
+  slow rotation of the ring). Regression: item 1 consistent → inconsistent (check) 7 (all descriptions that do not
+  fit their structure).
+- `width_count.py`, item 4(b) — range of the coupling constants. Every constant must fit at least one coupling of the
+  protons that can stand at the shift of its signal. Upper bounds: Table 4 (*ortho* 9.0 Hz; 10.0 Hz for N =
+  J_ortho + J_para of a ring that turns about its axis; *meta* 3; *para* 1; cis/trans 19; diene 12; HC(=O)–CH= 10;
+  allylic, benzylic, =CH2), 1 Hz for a 5-bond partner outside Table 4; 25 Hz (the rule of V2) when a partner within
+  4 bonds, or a homoallylic or zigzag 5-bond partner, is outside Table 4, or the proton is on N, O or S; no bound
+  within 7 bonds of F or P (H–F and H–P are not checked by range). J ≤ bound: no finding; up to bound + max(0.3 Hz,
+  reporting step): "candidate (check)"; more: "inconsistent". Constants above 25 Hz moved to H–X by size are checked
+  when the compound has F or P (an F of a counter-ion is not within 7 bonds); without F/P item 3 reports them as before.
+  Pretsch gives 6.5–8.5 Hz for *ortho*; the bound is wider because correct descriptions of the development data reach
+  9.0 Hz (1H signals) and 10.0 Hz (2H doublets of *para* rings). Regression: 12 descriptions (4(b) consistent →
+  inconsistent 5, → candidate 3; not checked (mixture) → inconsistent 2; nothing to check → inconsistent 1).
+- In all, V2.1.4 → V2.1.5 on the development table: conclusions inconsistent 1-4 1,229 → 1,268, 6 only 1,239 →
+  1,221, to check 4,312 → 4,297, no finding 1,760 → 1,125, not checked 0 → 629. SI of ol5c05448 (77 descriptions,
+  development data of V2.1.5): item 4(b) inconsistent in 21 more descriptions, 5 item-3 verdicts partner
+  unverifiable (¹⁹F without J); conclusions inconsistent 1-4 23 → 28.
+
+Changes that **do not change results**:
+- The website runs the same code (`site_api.py` in Pyodide with RDKit.js): on the 5,136 rows with a SMILES the
+  verdicts, findings, alerts and verification codes are the same as with RDKit in Python. New alerts on the website:
+  A for the counting of item 4(b), for the range of J and for item 1 (sets of equivalent protons); B for the width
+  test near another signal and for a constant at the range bound; C "No coupling constants reported". Italic *J*
+  and *ortho*/*meta*/*para* in the alerts; American spelling in the texts.
+- Structure stress test: a second pass with constants drawn within the Table-4 ranges and the full check, with four
+  new errors (one more large J on an aromatic H; an aromatic doublet as a singlet; an aromatic *ortho* J of 11–14 Hz;
+  a 2H ring signal split into two 1H signals) and self-test rows for them. Unit tests: tests/test_v215_fixes.py
+  (13 tests, synthetic descriptions only; 113 unit tests in all). Self-test with 100,000 synthetic descriptions per
+  test (seed 20261023): all pass (summary in `docs/selftest_V2.1.5-beta_100k.txt`); no false finding of the new rules
+  on correct descriptions; one more large J on an aromatic H is found in 87.6 % of cases, an aromatic doublet written
+  as a singlet in 45.9 %, an aromatic *ortho* J of 11–14 Hz in 34.2 %, a 2H ring signal split into two 1H signals in
+  52.9 % (no assignment is made: an NH/OH or a proton with partners outside Table 4 can take the place). Realistic
+  reading test (100,000 descriptions, seed 260626): 39 misread (0.04 %), as V2.1.4-beta.
+- `docs/development/width_criterion/`: the code that reproduces every computed number of the note on the width test
+  (exact diagonalization and closed forms; `test_width.py` checks 70 numbers and writes a log).
+- Not changed (open): 6(b) pairs by an accidental equal J; consequential flags; small J ≤ 2 Hz without a partner;
+  heteroaromatic and sp3 pairs have no range bound below 25 Hz.
+
 ## 2026-11-05 — V2.1.4-beta (one new check in item 4(b); open-chain CH2-CH2 in item 6(a))
 
 Changes that **change results** (only for descriptions with a structure):

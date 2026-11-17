@@ -1,0 +1,30 @@
+checkHNMR V2.1.5-beta - self-test summary
+Command: python run_all.py --selftest -n 100000   (run 17 November 2026, Linux, Python 3)
+The synthetic descriptions are regenerated from the code and the seed; they are not distributed.
+
+====================================================================================================
+Self-test of V2.1.5-beta (2026-11-17), 100000 synthetic descriptions per test, seed 20261023
+====================================================================================================
+  PASS  unit tests                                                          113 passed in 2.72s   expected all pass
+  PASS  reading: clean descriptions misread                                                   0   expected 0
+  PASS  reading: noisy descriptions misread                                68 of 97330 (0.07 %)   expected <= 0.5 % (decimal comma not counted)
+  PASS  items 3, 4(a), 6(b): false findings on correct descriptions                      0.00 %   expected 0
+  PASS  item 3: known errors found (j_mismatch)                                         100.0 %   expected >= 100 %
+  PASS  item 4(a): known errors found (j_missing)                                       100.0 %   expected >= 100 %
+  PASS  item 4(a): known errors found (j_extra)                                         100.0 %   expected >= 100 %
+  PASS  item 6(b): known errors found (strong)                                           94.6 %   expected >= 90 % (isolated AB pairs are exempt)
+  PASS  item 1: false findings on correct descriptions                                    0.0 %   expected <= 0.5 %
+  PASS  item 4(b): false findings on correct descriptions                                     0   expected 0
+  PASS  item 1: wrong integral found                                                     93.9 %   expected >= 85 % (one H fewer with an NH/OH: subcategory)
+  PASS  item 4(b): methyl singlet next to C-H found                                      95.4 %   expected >= 90 % (lower bound for methyl groups)
+  PASS  item 4(b): CH next to a CH3 doublet not a quartet found                          93.4 %   expected >= 90 % (missed when a multiplet without J could be the CH)
+  info  item 4(b): too many partners found                                               50.0 %   expected upper bound only
+  PASS  v2.1.5 rules: false findings on correct descriptions                                  0   expected 0
+  PASS  item 4(b): one more large J on an aromatic H found                               87.6 %   expected >= 80 % (missed when an NH/OH or a flexible proton can take the place)
+  info  item 4(b): aromatic doublet written as a singlet found                           45.9 %   expected no assignment; NH/OH, partners outside Table 4: no bound
+  info  item 4(b): aromatic ortho J of 11-14 Hz found                                    34.2 %   expected no assignment; NH/OH, partners outside Table 4: no bound
+  info  items 1, 4(b): 2H ring signal split into two 1H found                            52.9 %   expected no assignment; NH/OH, partners outside Table 4: no bound
+  PASS  reading: realistic descriptions misread                           30 of 100000 (0.03 %)   expected <= 0.5 % (forms and frequencies of the development data)
+====================================================================================================
+ALL PASSED
+The synthetic descriptions test the program, not its accuracy on published descriptions.

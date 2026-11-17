@@ -1,7 +1,7 @@
 README - names_to_smiles.py
 ===========================
 
-checkHNMR, local version V2.1.4-beta (see VERSION and CHANGELOG.md in the main folder for the
+checkHNMR, local version V2.1.5-beta (see VERSION and CHANGELOG.md in the main folder for the
 changes since version 1.1, which this description was first written for)
 
 Author: Artur V. Eshtukov-Shcheglov
